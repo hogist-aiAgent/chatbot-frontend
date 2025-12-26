@@ -4,7 +4,7 @@ import {
   CircularProgress, Tooltip, Divider 
 } from '@mui/material';
 import { 
-  Close, Send, SmartToy, ReceiptLong, CheckCircle 
+  Close, Send, SmartToy, ReceiptLong, CheckCircle, WhatsApp
 } from '@mui/icons-material';
 import { useChatStore } from '../store/useChatStore';
 
@@ -307,12 +307,17 @@ const ChatWidget = () => {
             onClick={toggleChat}
             sx={{ 
               position: 'fixed', bottom: 32, right: 32, width: 64, height: 64, 
-              bgcolor: '#2C3E50', color: 'white',
-              boxShadow: '0 8px 30px rgba(44, 62, 80, 0.4)',
-              '&:hover': { bgcolor: '#34495E' }
+              bgcolor: '#25D366', // <--- CHANGED: WhatsApp Green
+              color: 'white',
+              boxShadow: '0 8px 30px rgba(37, 211, 102, 0.4)', // <--- CHANGED: Green Shadow
+              '&:hover': { 
+                bgcolor: '#128C7E', // <--- CHANGED: Darker Green on Hover
+                transform: 'scale(1.05)',
+                transition: 'all 0.3s'
+              }
             }}
           >
-              <SmartToy sx={{ fontSize: 30 }} />
+              <WhatsApp sx={{ fontSize: 32 }} /> {/* <--- CHANGED: WhatsApp Icon */}
           </Fab>
         </Tooltip>
       )}
