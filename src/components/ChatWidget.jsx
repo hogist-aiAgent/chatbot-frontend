@@ -32,7 +32,7 @@ const ChatWidget = () => {
         <Paper 
           elevation={24}
           sx={{
-            position: 'fixed', bottom: { xs: 0, sm: 80 },right: { xs: 0, sm: 32 },
+            position: 'fixed', bottom: { xs: 15, sm: 40 },right: { xs: 0, sm: 32 },
             width: { xs: '100%', sm: 380 }, height: { xs: '100%', sm: 650 },
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
             zIndex: 9999, borderRadius: { xs: '20px 20px 0 0', sm: 4 },
