@@ -3,11 +3,7 @@ import axios from "axios";
 // ------------------------------
 // Base API URL
 // ------------------------------
-const API_BASE =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? "http://127.0.0.1:5000"
-    : "https://8a7c67092f94.ngrok-free.app";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 
 // ------------------------------
