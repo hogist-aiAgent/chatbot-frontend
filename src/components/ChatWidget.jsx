@@ -232,42 +232,75 @@ const ChatWidget = () => {
                       dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br/>') }}
                     />
 
-                    {/* QUICK ACTION BUTTONS (ONLY FOR FIRST BOT MESSAGE) */}
-                    {!isUser && idx === 0 && (
-                      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
-                        <Box
-                          onClick={() => sendMessage("Events")}
-                          sx={{
-                            px: 2,
-                            py: 0.8,
-                            borderRadius: 20,
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            bgcolor: '#B11226',
-                            color: 'white',
-                            '&:hover': { bgcolor: '#8E0F1F' }
-                          }}
-                        >
-                          🎉 Events
-                        </Box>
+{/* QUICK ACTION BUTTONS (ONLY FOR FIRST BOT MESSAGE) */}
+{!isUser && idx === 0 && (
+  <Box
+    sx={{
+      display: 'flex',
+      gap: 1,
+      mt: 1.5,
+      flexWrap: 'wrap'   // keeps it safe on small width
+    }}
+  >
+    
+    <Box
+      onClick={() => sendMessage("Events")}
+      sx={{
+        px: 2,
+        py: 0.6,
+        minWidth: 75,
+        textAlign: 'center',
+        borderRadius: 6,
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        bgcolor: '#B11226',
+        color: 'white',
+        '&:hover': { bgcolor: '#8E0F1F' }
+      }}
+    >
+      🎉 Events
+    </Box>
 
-                        <Box
-                          onClick={() => sendMessage("Daily Meals")}
-                          sx={{
-                            px: 2,
-                            py: 0.8,
-                            borderRadius: 20,
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            bgcolor: '#EDF2F7',
-                            color: '#2D3748',
-                            '&:hover': { bgcolor: '#E2E8F0' }
-                          }}
-                        >
-                          🍱 Daily Meals
-                        </Box>
+    <Box
+      onClick={() => sendMessage("Daily Meals")}
+      sx={{
+        px: 2,
+        py: 0.6,
+        minWidth: 95,
+        textAlign: 'center',
+        borderRadius: 6,
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        bgcolor: '#EDF2F7',
+        color: '#2D3748',
+        '&:hover': { bgcolor: '#E2E8F0' }
+      }}
+    >
+      🍱 Daily Meals
+    </Box>
+
+    <Box
+      onClick={() => sendMessage("Others")}
+      sx={{
+        px: 2,
+        py: 0.6,
+        minWidth: 75,
+        textAlign: 'center',
+        borderRadius: 6,
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        bgcolor: '#6B7280',
+        color: 'white',
+        '&:hover': { bgcolor: '#4B5563' }
+      }}
+    >
+      📩 Others
+    </Box>
+
+
                       </Box>
                     )}
                   </Paper>

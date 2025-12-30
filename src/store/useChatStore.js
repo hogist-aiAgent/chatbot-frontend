@@ -8,7 +8,7 @@ const API_BASE =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1"
     ? "http://127.0.0.1:5000"
-    : import.meta.env.VITE_API_BASE_URL || "https://hogist-chatbot.onrender.com";
+    : import.meta.env.VITE_API_BASE_URL;
 
 // ------------------------------
 
@@ -47,7 +47,29 @@ export const useChatStore = create((set, get) => ({
 
     const { chatId, messages } = get();
 
-    // Optimistic update
+    // ==============================
+    // 🔴 HANDLE "OTHERS" QUICK ACTION
+    // ==============================
+    if (text === "Others") {
+      set({
+        messages: [
+          ...messages,
+          { role: "user", text: "Others" },
+          {
+            role: "assistant",
+            text:
+              "Thanks for reaching out to Hogist 😊<br/>" +
+              "For any further queries, just drop us a mail at <b>support@hogist.com</b> Or call us directly at <b>78945 61235</b>.",
+          },
+        ],
+        isLoading: false,
+      });
+      return; // ⛔ stop API / bot flow
+    }
+
+    // ------------------------------
+    // Normal bot flow (Events / Daily Meals)
+    // ------------------------------
     set({
       messages: [...messages, { role: "user", text }],
       isLoading: true,
