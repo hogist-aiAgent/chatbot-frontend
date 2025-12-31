@@ -380,15 +380,15 @@ const Dashboard = () => {
 
           return (
             <ListItemButton
-              key={chat.chat_id}
+                        key={chat.chat_id}
               selected={activeChatId === chat.chat_id}
               onClick={() => setActiveChatId(chat.chat_id)}
               sx={{
                 borderRadius: 3,
                 mb: 0.5,
                 p: 1.5,
-                bgcolor: activeChatId === chat.chat_id ? '#FDF8EC' : 'transparent',
-                borderLeft: activeChatId === chat.chat_id ? '4px solid #D4AF37' : '4px solid transparent',
+                bgcolor: activeChatId === chat.chat_id ? '#FEF2F2' : 'transparent', // Light red background
+                borderLeft: activeChatId === chat.chat_id ? '4px solid #C30B0B' : '4px solid transparent', // Logo Red border
                 transition: 'all 0.2s',
               }}
             >
@@ -409,7 +409,7 @@ const Dashboard = () => {
                   }}
                 >
                   <Avatar sx={{
-                    bgcolor: activeChatId === chat.chat_id ? '#D4AF37' : '#EDF2F7',
+                    bgcolor: activeChatId === chat.chat_id ? '#C30B0B' : '#EDF2F7',
                     color: activeChatId === chat.chat_id ? 'white' : '#4A5568',
                     fontWeight: 'bold'
                   }}>
@@ -455,39 +455,39 @@ const Dashboard = () => {
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: '#FAFAFA', borderColor: '#E9ECEF', mb: 3 }}>
         <Box display="flex" justifyContent="space-between" mb={1}>
           <Typography variant="caption" fontWeight="bold">DATA COMPLETENESS</Typography>
-          <Typography variant="caption" fontWeight="bold" color={leadScore > 75 ? "success.main" : "warning.main"}>{leadScore}%</Typography>
+          <Typography variant="caption" fontWeight="bold" sx={{ color: leadScore > 75 ? "#2e7d32" : "#C30B0B" }}>{leadScore}%</Typography>
         </Box>
-        <LinearProgress variant="determinate" value={leadScore} color={leadScore > 75 ? "success" : "warning"} sx={{ height: 8, borderRadius: 5 }} />
+        <LinearProgress variant="determinate" value={leadScore} sx={{ height: 8, borderRadius: 5, "& .MuiLinearProgress-bar": { bgcolor: leadScore > 75 ? "#2e7d32" : "#C30B0B" } }} />
       </Paper>
 
       <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Avatar sx={{ width: 72, height: 72, mx: 'auto', bgcolor: '#FFF8E1', color: '#D4AF37', fontSize: 28, mb: 1.5, border: '1px solid #F0E68C' }}>
+        <Avatar sx={{ width: 72, height: 72, mx: 'auto', bgcolor: '#FEF2F2', color: '#C30B0B', fontSize: 28, mb: 1.5, border: '1px solid #FEE2E2' }}>
           {activeLeadData.customer_name?.[0] || "G"}
         </Avatar>
         <Typography variant="h6" fontWeight="800" color="#2C3E50">{activeLeadData.customer_name || "Guest"}</Typography>
 
         <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.8 }}>
           <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#555', fontWeight: 500, fontSize: '0.9rem' }}>
-            <Phone fontSize="small" sx={{ color: '#D4AF37' }} /> {activeLeadData.contact_number || "-"}
+            <Phone fontSize="small" sx={{ color: '#C30B0B' }} /> {activeLeadData.contact_number || "-"}
           </Typography>
           {activeLeadData.email && (
             <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#555', fontWeight: 500, fontSize: '0.9rem' }}>
-              <Mail fontSize="small" sx={{ color: '#D4AF37' }} /> {activeLeadData.email}
+              <Mail fontSize="small" sx={{ color: '#C30B0B' }}/> {activeLeadData.email}
             </Typography>
           )}
           {/* Creation Date */}
             <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#555', fontWeight: 500, fontSize: '0.9rem' }}>
-              <CalendarMonth fontSize="small" sx={{ color: '#D4AF37' }} /> 
+              <CalendarMonth fontSize="small" sx={{ color: '#C30B0B' }} /> 
               {/* Gets date from the chat list object */}
               {formatDateOnly(chats.find(c => c.chat_id === activeChatId)?.created_at || chats.find(c => c.chat_id === activeChatId)?.updated_at)}
             </Typography>
         </Box>
       </Box>
 
-      <Paper sx={{ p: 2.5, mb: 3, bgcolor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 3, boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+      <Paper sx={{ p: 2, bgcolor: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: 2 , boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
         <Box display="flex" alignItems="center" gap={1} mb={2} pb={1} borderBottom="1px dashed #E0E0E0">
-          <Description fontSize="small" sx={{ color: '#D4AF37' }} />
-          <Typography variant="subtitle2" fontWeight="800" color="#2C3E50">LEAD SUMMARY</Typography>
+          <Description fontSize="small" sx={{ color: '#C30B0B' }} />
+          <Typography variant="caption" fontWeight="bold" color="#C30B0B" sx={{ mb: 1, display: 'block' }}>INTERNAL NOTES</Typography>
         </Box>
 
         {loadingSummary ? (
@@ -679,7 +679,7 @@ const Dashboard = () => {
                         width: 32,
                         height: 32,
                         bgcolor: msg.role === 'user' ? '#fff' : '#2C3E50',
-                        color: msg.role === 'user' ? '#333' : '#D4AF37',
+                        color: msg.role === 'user' ? '#333' : 'white',
                         boxShadow: 1,
                         fontSize: 12
                       }}
