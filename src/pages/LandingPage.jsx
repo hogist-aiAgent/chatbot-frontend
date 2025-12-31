@@ -20,16 +20,23 @@ const LandingPage = () => {
         <Container maxWidth="lg">
           <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
             <Box display="flex" alignItems="center" gap={1}>
-              <Box sx={{ 
-                width: 36, height: 36, bgcolor: 'primary.main', borderRadius: 2, 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800 
-              }}>H</Box>
+              {/* LOGO IMAGE */}
+              <img 
+                src="/logo.png" 
+                alt="Hogist Logo" 
+                style={{ width: 40, height: 40, objectFit: 'contain' }} 
+              />
               <Typography variant="h5" color="text.primary" fontWeight={800}>Hogist</Typography>
             </Box>
             <Button 
-              variant="contained" color="primary" 
+              variant="contained"
               onClick={() => navigate('/dashboard')}
-              sx={{ borderRadius: 50, px: 3 }}
+              sx={{ 
+                borderRadius: 50, 
+                px: 3,
+                bgcolor: '#C41E3A',
+                '&:hover': { bgcolor: '#A01828' }
+              }}
             >
               Access Dashboard
             </Button>
@@ -43,7 +50,7 @@ const LandingPage = () => {
         {/* Background Gradients */}
         <Box sx={{
           position: 'absolute', top: -100, right: -100, width: 600, height: 600,
-          background: 'radial-gradient(circle, rgba(156,74,74,0.08) 0%, rgba(255,255,255,0) 70%)',
+          background: 'radial-gradient(circle, rgba(196,30,58,0.08) 0%, rgba(255,255,255,0) 70%)',
           borderRadius: '50%', zIndex: -1
         }} />
 
@@ -52,7 +59,13 @@ const LandingPage = () => {
             <Chip 
               icon={<Bolt fontSize="small" />} 
               label="The Future of Bulk Catering" 
-              sx={{ bgcolor: '#FFF5F5', color: 'primary.main', fontWeight: 700, mb: 3 }} 
+              sx={{ 
+                bgcolor: '#FFF0F2', 
+                color: '#C41E3A', 
+                fontWeight: 700, 
+                mb: 3,
+                border: '1px solid rgba(196,30,58,0.2)'
+              }} 
             />
             <Typography variant="h1" sx={{ 
               fontSize: { xs: '3rem', md: '4.5rem' }, 
@@ -60,7 +73,7 @@ const LandingPage = () => {
               letterSpacing: '-2px'
             }}>
               Feed your team, <br/>
-              <span style={{ color: '#9c4a4a' }}>not the stress.</span>
+              <span style={{ color: '#C41E3A' }}>not the stress.</span>
             </Typography>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 4, fontWeight: 400, lineHeight: 1.6 }}>
               Hogist connects companies and events with top-tier cloud kitchens. 
@@ -68,21 +81,45 @@ const LandingPage = () => {
             </Typography>
             
             <Box display="flex" gap={2} flexDirection={isMobile ? 'column' : 'row'}>
-              <Button variant="contained" size="large" sx={{ py: 1.5, px: 4, fontSize: '1.1rem' }}>
+              <Button 
+                variant="contained" 
+                size="large" 
+                sx={{ 
+                  py: 1.5, 
+                  px: 4, 
+                  fontSize: '1.1rem',
+                  bgcolor: '#C41E3A',
+                  '&:hover': { bgcolor: '#A01828' }
+                }}
+              >
                 Start Ordering
               </Button>
-              <Button variant="outlined" size="large" sx={{ py: 1.5, px: 4, fontSize: '1.1rem', borderColor: '#ccc', color: '#555' }}>
+              <Button 
+                variant="outlined" 
+                size="large" 
+                sx={{ 
+                  py: 1.5, 
+                  px: 4, 
+                  fontSize: '1.1rem', 
+                  borderColor: '#C41E3A', 
+                  color: '#C41E3A',
+                  '&:hover': { 
+                    borderColor: '#A01828', 
+                    bgcolor: 'rgba(196,30,58,0.05)' 
+                  }
+                }}
+              >
                 View Demo
               </Button>
             </Box>
 
             <Box mt={6} display="flex" gap={4}>
               <Box>
-                <Typography variant="h4" fontWeight={800}>2.5k+</Typography>
+                <Typography variant="h4" fontWeight={800} color="#C41E3A">2.5k+</Typography>
                 <Typography variant="body2" color="text.secondary">Events</Typography>
               </Box>
               <Box>
-                <Typography variant="h4" fontWeight={800}>98%</Typography>
+                <Typography variant="h4" fontWeight={800} color="#C41E3A">98%</Typography>
                 <Typography variant="body2" color="text.secondary">Satisfaction</Typography>
               </Box>
             </Box>
@@ -94,7 +131,7 @@ const LandingPage = () => {
                 elevation={24}
                 sx={{ 
                   borderRadius: '40px', overflow: 'hidden', 
-                  border: '8px solid rgba(255,255,255,0.5)',
+                  border: '8px solid rgba(196,30,58,0.1)',
                   transform: 'rotate(-2deg)', transition: 'transform 0.3s',
                   '&:hover': { transform: 'rotate(0deg) scale(1.02)' }
                 }}
@@ -114,7 +151,7 @@ const LandingPage = () => {
                   borderRadius: 4, display: 'flex', alignItems: 'center', gap: 2 
                 }}
               >
-                <Avatar sx={{ bgcolor: '#48BB78' }}><Groups /></Avatar>
+                <Avatar sx={{ bgcolor: '#C41E3A' }}><Groups /></Avatar>
                 <Box>
                   <Typography variant="subtitle2" fontWeight={700}>Corporate Lunch</Typography>
                   <Typography variant="caption">Processing for 50 Pax...</Typography>
