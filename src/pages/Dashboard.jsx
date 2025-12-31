@@ -14,6 +14,30 @@ import { useTheme } from '@mui/material/styles';
 const SIDEBAR_WIDTH = 360;
 const DETAILS_WIDTH = 400;
 
+const formatFullDateTime = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+};
+
+// For the Summary Panel (Date Only)
+const formatDateOnly = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+const formatMessageTime = (dateString) => {
+  if (!dateString) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); 
+  return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
 const cleanText = (text) => {
   if (!text) return "";
   return text.replace(/Current DateTime:.*$/gmi, '').trim();
@@ -32,10 +56,30 @@ const api = axios.create({
   timeout: 20000,
 });
 
+const formatWhatsAppDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (isYesterday) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+  }
+};
+
 const Dashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  
 
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
@@ -228,8 +272,13 @@ const Dashboard = () => {
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" fontWeight={isUnread ? "800" : "600"} color="#2D3748" noWrap sx={{ maxWidth: '80%' }}>
+                  <Typography variant="body2" fontWeight={isUnread ? "800" : "600"} color="#2D3748" noWrap sx={{ maxWidth: '75%' }}>
                     {name} <span style={{ fontWeight: 400, color: '#718096', fontSize: '0.85em' }}>{locString}</span>
+                  </Typography>
+                  
+                  {/* Add the Timestamp here */}
+                  <Typography variant="caption" sx={{ color: isUnread ? '#E53E3E' : '#718096', fontWeight: isUnread ? 700 : 400, fontSize: '0.75rem', whiteSpace: 'nowrap', ml: 1 }}>
+                    {formatWhatsAppDate(chat.updated_at)}
                   </Typography>
                 </Box>
 
@@ -278,6 +327,12 @@ const Dashboard = () => {
               <Mail fontSize="small" sx={{ color: '#D4AF37' }} /> {activeLeadData.email}
             </Typography>
           )}
+          {/* Creation Date */}
+            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#555', fontWeight: 500, fontSize: '0.9rem' }}>
+              <CalendarMonth fontSize="small" sx={{ color: '#D4AF37' }} /> 
+              {/* Gets date from the chat list object */}
+              {formatDateOnly(chats.find(c => c.chat_id === activeChatId)?.created_at || chats.find(c => c.chat_id === activeChatId)?.updated_at)}
+            </Typography>
         </Box>
       </Box>
 
@@ -399,6 +454,24 @@ const Dashboard = () => {
             </AppBar>
 
             <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+              {/* Start Date/Time Indicator */}
+              {activeMessages.length > 0 && (
+                <Box display="flex" justifyContent="center" mb={3} mt={1}>
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      px: 2, py: 0.5, 
+                      bgcolor: '#E2E8F0', 
+                      borderRadius: 4, 
+                      border: '1px solid #CBD5E0'
+                    }}
+                  >
+                    <Typography variant="caption" color="#4A5568" fontWeight="600" fontSize="0.75rem">
+                      {formatFullDateTime(activeMessages[0].timestamp || chats.find(c => c.chat_id === activeChatId)?.updated_at)}
+                    </Typography>
+                  </Paper>
+                </Box>
+              )}
               {Array.isArray(activeMessages) && activeMessages.map((msg, idx) => (
                 <Box
                   key={idx}
@@ -424,19 +497,36 @@ const Dashboard = () => {
                     </Avatar>
 
                     <Paper
-                      elevation={1}
+                    elevation={1}
                       sx={{
-                        p: 2,
+                        p: 1.5, // Reduced padding slightly for tighter look
+                        px: 2,
                         borderRadius: 2,
                         bgcolor: msg.role === 'user' ? 'white' : '#2C3E50',
                         color: msg.role === 'user' ? '#2C3E50' : 'white',
                         borderTopLeftRadius: msg.role === 'user' ? 4 : 16,
-                        borderTopRightRadius: msg.role === 'user' ? 16 : 4
+                        borderTopRightRadius: msg.role === 'user' ? 16 : 4,
+                        minWidth: '120px', // Ensures space for time
+                        position: 'relative'
                       }}
                     >
-                      <Typography variant="body2" sx={{ lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                      <Typography variant="body2" sx={{ lineHeight: 1.5, whiteSpace: 'pre-wrap', mb: 0.5 }}>
                         {cleanText(msg.text)}
                       </Typography>
+
+                      {/* TIME STAMP */}
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                         <Typography 
+                           variant="caption" 
+                           sx={{ 
+                             fontSize: '0.65rem', 
+                             color: msg.role === 'user' ? '#718096' : 'rgba(255,255,255,0.7)',
+                             mt: -0.5 // Pulls it up slightly
+                           }}
+                         >
+                           {formatMessageTime(msg.timestamp)}
+                         </Typography>
+                      </Box>
                     </Paper>
                   </Box>
                 </Box>
