@@ -205,7 +205,12 @@ const Dashboard = () => {
       {/* Header with Search */}
       <Box sx={{ p: 2, borderBottom: '1px solid #f0f0f0' }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={2}>
-          <Avatar sx={{ bgcolor: '#2C3E50', width: 32, height: 32, fontSize: 16, fontWeight: 'bold', color: '#D4AF37' }}>H</Avatar>
+          {/* LOGO IMAGE */}
+          <img 
+            src="/logo.png" 
+            alt="Hogist Logo" 
+            style={{ width: 40, height: 40, objectFit: 'contain' }} 
+          />
           <Typography variant="h6" fontWeight="800" color="#2C3E50">Hogist CRM</Typography>
         </Box>
         <Paper elevation={0} sx={{ p: '6px 12px', display: 'flex', alignItems: 'center', borderRadius: 3, bgcolor: '#F8F9FA', border: '1px solid #E9ECEF' }}>
