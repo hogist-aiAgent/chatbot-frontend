@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Box, Drawer, AppBar, Toolbar, Typography, List, ListItemButton,
   ListItemAvatar, Avatar, Paper, IconButton, InputBase,
-  LinearProgress, Badge, TextField, Skeleton, useMediaQuery
+  LinearProgress, Badge, TextField, Skeleton, useMediaQuery,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button,
+  Menu, MenuItem, Divider
 } from '@mui/material';
 import {
   Search, Notifications, Phone, Mail, Place, Circle,
-  CheckCircle, CalendarMonth, Bolt, ArrowBack, Info, Close, Description
+  CheckCircle, CalendarMonth, Bolt, ArrowBack, Info, Close, Description,
+  Logout, Security, ErrorOutline
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
@@ -77,6 +81,7 @@ const formatWhatsAppDate = (dateString) => {
 
 const Dashboard = () => {
   const theme = useTheme();
+  const navigate = useNavigate(); // Required for redirection
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   
@@ -90,6 +95,65 @@ const Dashboard = () => {
   const [showMobileDetails, setShowMobileDetails] = useState(false);
   const [summary, setSummary] = useState("");
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [sessionError, setSessionError] = useState(false);
+  const [loginLogs, setLoginLogs] = useState([]);
+  const [notifAnchor, setNotifAnchor] = useState(null);
+  const fetchLogs = async () => {
+    try {
+        const res = await api.get('/auth/logs');
+        setLoginLogs(res.data);
+    } catch(e) {
+        console.error("Failed to fetch logs");
+    }
+  };
+  useEffect(() => { fetchLogs(); }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('hogist_token');
+    if (!token) {
+        navigate('/login');
+        return;
+    }
+
+    const verifySession = async () => {
+        try {
+            await axios.post('http://127.0.0.1:5000/auth/verify-session', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } catch (error) {
+            // If 409, it means logged in elsewhere. If 401, token expired.
+            if (error.response && (error.response.status === 409 || error.response.status === 401)) {
+                setSessionError(true);
+                localStorage.removeItem('hogist_token');
+            }
+        }
+    };
+
+    // Check immediately and then every 5 seconds
+    verifySession();
+    const interval = setInterval(verifySession, 5000);
+    return () => clearInterval(interval);
+  }, [navigate]);
+
+  const handleLogout = () => {
+      localStorage.removeItem('hogist_token');
+      navigate('/login');
+  };
+
+  // 2. Fetch Chat List (Authenticated)
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        // In real prod, add headers here too. Skipping for now for chat list as it's less critical than write ops, 
+        // but ideally: headers: { Authorization: `Bearer ${localStorage.getItem('hogist_token')}` }
+        const res = await axios.get('http://127.0.0.1:5000/website-get-all-chats');
+        setChats(res.data);
+      } catch(e) {}
+    };
+    fetch();
+    const interval = setInterval(fetch, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // 1. Fetch Chat List
   useEffect(() => {
@@ -199,20 +263,99 @@ const Dashboard = () => {
     return content.includes(term);
   });
 
+  // NEW: Session Terminated Dialog
+  if (sessionError) {
+      return (
+        <Dialog open={true}>
+            <DialogTitle color="error">Session Terminated</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    You have been logged out because this account signed in from another device. 
+                    Only one active session is allowed.
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => navigate('/login')} variant="contained" color="primary">Back to Login</Button>
+            </DialogActions>
+        </Dialog>
+      );
+  }
+
   // UI SECTIONS
   const Sidebar = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#fff', borderRight: '1px solid #E0E0E0' }}>
       {/* Header with Search */}
       <Box sx={{ p: 2, borderBottom: '1px solid #f0f0f0' }}>
-        <Box display="flex" alignItems="center" gap={1.5} mb={2}>
-          {/* LOGO IMAGE */}
-          <img 
-            src="/logo.png" 
-            alt="Hogist Logo" 
-            style={{ width: 40, height: 40, objectFit: 'contain' }} 
-          />
-          <Typography variant="h6" fontWeight="800" color="#2C3E50">Hogist CRM</Typography>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+           {/* LEFT: Logo & Title */}
+           <Box display="flex" alignItems="center" gap={1.5}>
+              <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+              <Typography variant="h6" fontWeight="800" color="#2C3E50">Hogist CRM</Typography>
+           </Box>
+           
+           {/* RIGHT: Notifications & Logout */}
+           <Box display="flex" alignItems="center" gap={0.5}>
+               {/* 1. NOTIFICATION BELL (Moved Here) */}
+               <IconButton onClick={(e) => { setNotifAnchor(e.currentTarget); fetchLogs(); }} size="small">
+                  <Badge variant="dot" color="error" invisible={loginLogs.length === 0}>
+                    <Notifications color="action" />
+                  </Badge>
+               </IconButton>
+
+               {/* 2. LOGOUT BUTTON */}
+               <IconButton onClick={handleLogout} size="small" color="error" title="Logout">
+                   <Logout />
+               </IconButton>
+           </Box>
         </Box>
+
+        {/* --- PASTE THE MENU COMPONENT HERE --- */}
+        <Menu
+            anchorEl={notifAnchor}
+            open={Boolean(notifAnchor)}
+            onClose={() => setNotifAnchor(null)}
+            PaperProps={{ sx: { width: 320, maxHeight: 400, borderRadius: 3, mt: 1 } }}
+            transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+        >
+            <Box sx={{ p: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" fontWeight="800">Login Activity</Typography>
+                <Typography variant="caption" color="primary" sx={{ cursor:'pointer' }} onClick={fetchLogs}>Refresh</Typography>
+            </Box>
+            <Divider />
+            {loginLogs.length === 0 ? (
+                <Box p={2} textAlign="center"><Typography variant="caption">No logs found</Typography></Box>
+            ) : (
+                loginLogs.map((log, i) => (
+                    <MenuItem key={i} sx={{ gap: 1.5, alignItems: 'flex-start', py: 1.5, borderBottom: '1px solid #f5f5f5' }}>
+                        <Box mt={0.5}>
+                            {log.status === 'Success' 
+                                ? <Security fontSize="small" color="success" /> 
+                                : <ErrorOutline fontSize="small" color="error" />
+                            }
+                        </Box>
+                        <Box>
+                            <Typography variant="body2" fontWeight="600" color="#2C3E50">
+                                {log.username} 
+                                <span style={{ 
+                                    fontWeight: 400, marginLeft: 6, fontSize: '0.75rem', padding: '2px 6px', 
+                                    borderRadius: 4, backgroundColor: log.status === 'Success' ? '#E6FFFA' : '#FFF5F5',
+                                    color: log.status === 'Success' ? '#276749' : '#C53030'
+                                }}>
+                                    {log.status}
+                                </span>
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                {new Date(log.timestamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' })}
+                            </Typography>
+                            <Typography variant="caption" color="#A0AEC0" fontFamily="monospace">IP: {log.ip_address}</Typography>
+                        </Box>
+                    </MenuItem>
+                ))
+            )}
+        </Menu>
+        {/* ------------------------------------ */}
+
         <Paper elevation={0} sx={{ p: '6px 12px', display: 'flex', alignItems: 'center', borderRadius: 3, bgcolor: '#F8F9FA', border: '1px solid #E9ECEF' }}>
           <Search sx={{ color: '#A0AEC0' }} />
           <InputBase sx={{ ml: 1, flex: 1, fontSize: 14 }} placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -379,20 +522,6 @@ const Dashboard = () => {
           </Box>
         ))}
       </Box>
-
-      <Paper sx={{ p: 2, bgcolor: '#FFFBEA', border: '1px solid #F0E68C', borderRadius: 2 }}>
-        <Typography variant="caption" fontWeight="bold" color="#B7950B" sx={{ mb: 1, display: 'block' }}>INTERNAL NOTES</Typography>
-        <TextField
-          fullWidth
-          multiline
-          rows={2}
-          placeholder="Add admin note..."
-          value={internalNote}
-          onChange={(e) => setInternalNote(e.target.value)}
-          variant="standard"
-          InputProps={{ disableUnderline: true }}
-        />
-      </Paper>
     </Box>
   );
 
@@ -448,13 +577,70 @@ const Dashboard = () => {
                   </Box>
                 </Box>
 
-                {isMobile && <IconButton onClick={() => setShowMobileDetails(true)} color="primary"><Info /></IconButton>}
-                {!isMobile && (
-                  <>
-                    <IconButton><Notifications /></IconButton>
-                    <Avatar sx={{ ml: 2, bgcolor: '#2C3E50', width: 34, height: 34 }}>A</Avatar>
-                  </>
+                {isMobile && (
+                  <IconButton onClick={() => setShowMobileDetails(true)} color="primary">
+                    <Info />
+                  </IconButton>
                 )}
+
+                {/* Unified Admin Avatar - Removed the duplicate entry and corrected logic */}
+                {!isMobile && (
+                  <Avatar sx={{ ml: 2, bgcolor: '#2C3E50', width: 34, height: 34 }}>A</Avatar>
+                )}
+
+                <Menu
+                  anchorEl={notifAnchor}
+                  open={Boolean(notifAnchor)}
+                  onClose={() => setNotifAnchor(null)}
+                  PaperProps={{ sx: { width: 320, maxHeight: 400, borderRadius: 3, mt: 1 } }}
+                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                >
+                  <Box sx={{ p: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle2" fontWeight="800">Login Activity</Typography>
+                    <Typography variant="caption" color="primary" sx={{ cursor: 'pointer' }} onClick={fetchLogs}>Refresh</Typography>
+                  </Box>
+                  <Divider />
+
+                  {loginLogs.length === 0 ? (
+                    <Box p={2} textAlign="center"><Typography variant="caption">No logs found</Typography></Box>
+                  ) : (
+                    loginLogs.map((log, i) => (
+                      <MenuItem key={i} sx={{ gap: 1.5, alignItems: 'flex-start', py: 1.5, borderBottom: '1px solid #f5f5f5' }}>
+                        <Box mt={0.5}>
+                          {log.status === 'Success'
+                            ? <Security fontSize="small" color="success" />
+                            : <ErrorOutline fontSize="small" color="error" />
+                          }
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" fontWeight="600" color="#2C3E50">
+                            {log.username}
+                            <span style={{
+                              fontWeight: 400,
+                              marginLeft: 6,
+                              fontSize: '0.75rem',
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              backgroundColor: log.status === 'Success' ? '#E6FFFA' : '#FFF5F5',
+                              color: log.status === 'Success' ? '#276749' : '#C53030'
+                            }}>
+                              {log.status}
+                            </span>
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                            {new Date(log.timestamp).toLocaleString('en-GB', {
+                              day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                            })}
+                          </Typography>
+                          <Typography variant="caption" color="#A0AEC0" fontFamily="monospace">
+                            IP: {log.ip_address}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))
+                  )}
+                </Menu>
               </Toolbar>
             </AppBar>
 

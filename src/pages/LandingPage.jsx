@@ -30,7 +30,7 @@ const LandingPage = () => {
             </Box>
             <Button 
               variant="contained"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/login')}
               sx={{ 
                 borderRadius: 50, 
                 px: 3,
@@ -38,7 +38,7 @@ const LandingPage = () => {
                 '&:hover': { bgcolor: '#A01828' }
               }}
             >
-              Access Dashboard
+              Admin Login
             </Button>
           </Toolbar>
         </Container>
