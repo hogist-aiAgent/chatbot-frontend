@@ -249,47 +249,77 @@ const ChatWidget = () => {
                       />
 
                       {!isUser && idx === 0 && (
-                        <Box mt={1.5} display="flex" gap={1}>
-                          <Box
-                            onClick={() => sendMessage("Events")}
-                            sx={{
-                              px: 2,
-                              py: 0.5,
-                              bgcolor: "#B11226",
-                              color: "white",
-                              borderRadius: 4,
-                              cursor: "pointer",
-                            }}
-                          >
-                            🎉 Events
-                          </Box>
-                          <Box
-                            onClick={() => sendMessage("Daily Meals")}
-                            sx={{
-                              px: 2,
-                              py: 0.5,
-                              bgcolor: "#EDF2F7",
-                              borderRadius: 4,
-                              cursor: "pointer",
-                            }}
-                          >
-                            🍱 Daily Meals
-                          </Box>
-                          <Box
-                            onClick={() => sendMessage("Others")}
-                            sx={{
-                              px: 2,
-                              py: 0.5,
-                              bgcolor: "#6B7280",
-                              color: "white",
-                              borderRadius: 4,
-                              cursor: "pointer",
-                            }}
-                          >
-                            📩 Others
-                          </Box>
-                        </Box>
-                      )}
+                        <Box 
+    mt={1.5} 
+    display="flex" 
+    gap={1} 
+    flexWrap="wrap" // Essential for the layout in Image 2
+    alignItems="center"
+  >
+    {/* Events Button */}
+    <Box
+      onClick={() => sendMessage("Events")}
+      sx={{
+        px: 1.5,
+        py: 0.6,
+        bgcolor: "#B11226",
+        color: "white",
+        borderRadius: "20px", // Forces the pill shape
+        cursor: "pointer",
+        fontSize: "0.85rem",
+        fontWeight: 600,
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        whiteSpace: "nowrap"
+      }}
+    >
+      🎉 Events
+    </Box>
+
+    {/* Daily Meals Button */}
+    <Box
+      onClick={() => sendMessage("Daily Meals")}
+      sx={{
+        px: 1.5,
+        py: 0.6,
+        bgcolor: "#EDF2F7",
+        color: "#1A202C", // Darker text for readability
+        borderRadius: "20px",
+        cursor: "pointer",
+        fontSize: "0.85rem",
+        fontWeight: 600,
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        whiteSpace: "nowrap"
+      }}
+    >
+      🍱 Daily Meals
+    </Box>
+
+    {/* Others Button */}
+    <Box
+      onClick={() => sendMessage("Others")}
+      sx={{
+        px: 1.5,
+        py: 0.6,
+        bgcolor: "#6B7280",
+        color: "white",
+        borderRadius: "20px",
+        cursor: "pointer",
+        fontSize: "0.85rem",
+        fontWeight: 600,
+        display: "flex",
+        alignItems: "center",
+        gap: 0.5,
+        whiteSpace: "nowrap"
+      }}
+    >
+      📩 Others
+    </Box>
+  </Box>
+)}
                     </Paper>
                   )}
                 </Box>
