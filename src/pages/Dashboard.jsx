@@ -1,18 +1,46 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import {
   Box, Drawer, AppBar, Toolbar, Typography, List, ListItemButton,
   ListItemAvatar, Avatar, Paper, IconButton, InputBase,
-  LinearProgress, Badge, TextField, Skeleton, useMediaQuery
+  LinearProgress, Badge, TextField, Skeleton, useMediaQuery,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button,
+  Menu, MenuItem, Divider
 } from '@mui/material';
 import {
   Search, Notifications, Phone, Mail, Place, Circle,
-  CheckCircle, CalendarMonth, Bolt, ArrowBack, Info, Close, Description
+  CheckCircle, CalendarMonth, Bolt, ArrowBack, Info, Close, Description,
+  Logout, Security, ErrorOutline
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
 const SIDEBAR_WIDTH = 360;
 const DETAILS_WIDTH = 400;
+
+const formatFullDateTime = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+};
+
+// For the Summary Panel (Date Only)
+const formatDateOnly = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+const formatMessageTime = (dateString) => {
+  if (!dateString) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); 
+  return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+};
 
 const cleanText = (text) => {
   if (!text) return "";
@@ -23,7 +51,7 @@ const cleanText = (text) => {
 const API_BASE =
   (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     ? "http://127.0.0.1:5000"
-    : (import.meta.env.VITE_API_BASE_URL || "https://hogist-chatbot.onrender.com");
+    : (import.meta.env.VITE_API_BASE_URL);
 
 // ✅ axios defaults (optional but clean)
 const api = axios.create({
@@ -32,10 +60,31 @@ const api = axios.create({
   timeout: 20000,
 });
 
+const formatWhatsAppDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else if (isYesterday) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+  }
+};
+
 const Dashboard = () => {
   const theme = useTheme();
+  const navigate = useNavigate(); // Required for redirection
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  
 
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
@@ -46,6 +95,65 @@ const Dashboard = () => {
   const [showMobileDetails, setShowMobileDetails] = useState(false);
   const [summary, setSummary] = useState("");
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [sessionError, setSessionError] = useState(false);
+  const [loginLogs, setLoginLogs] = useState([]);
+  const [notifAnchor, setNotifAnchor] = useState(null);
+  const fetchLogs = async () => {
+    try {
+        const res = await api.get('/auth/logs');
+        setLoginLogs(res.data);
+    } catch(e) {
+        console.error("Failed to fetch logs");
+    }
+  };
+  useEffect(() => { fetchLogs(); }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('hogist_token');
+    if (!token) {
+        navigate('/login');
+        return;
+    }
+
+    const verifySession = async () => {
+        try {
+            await axios.post('http://127.0.0.1:5000/auth/verify-session', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } catch (error) {
+            // If 409, it means logged in elsewhere. If 401, token expired.
+            if (error.response && (error.response.status === 409 || error.response.status === 401)) {
+                setSessionError(true);
+                localStorage.removeItem('hogist_token');
+            }
+        }
+    };
+
+    // Check immediately and then every 5 seconds
+    verifySession();
+    const interval = setInterval(verifySession, 5000);
+    return () => clearInterval(interval);
+  }, [navigate]);
+
+  const handleLogout = () => {
+      localStorage.removeItem('hogist_token');
+      navigate('/login');
+  };
+
+  // 2. Fetch Chat List (Authenticated)
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        // In real prod, add headers here too. Skipping for now for chat list as it's less critical than write ops, 
+        // but ideally: headers: { Authorization: `Bearer ${localStorage.getItem('hogist_token')}` }
+        const res = await axios.get('http://127.0.0.1:5000/website-get-all-chats');
+        setChats(res.data);
+      } catch(e) {}
+    };
+    fetch();
+    const interval = setInterval(fetch, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // 1. Fetch Chat List
   useEffect(() => {
@@ -155,15 +263,99 @@ const Dashboard = () => {
     return content.includes(term);
   });
 
+  // NEW: Session Terminated Dialog
+  if (sessionError) {
+      return (
+        <Dialog open={true}>
+            <DialogTitle color="error">Session Terminated</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    You have been logged out because this account signed in from another device. 
+                    Only one active session is allowed.
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => navigate('/login')} variant="contained" color="primary">Back to Login</Button>
+            </DialogActions>
+        </Dialog>
+      );
+  }
+
   // UI SECTIONS
   const Sidebar = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#fff', borderRight: '1px solid #E0E0E0' }}>
       {/* Header with Search */}
       <Box sx={{ p: 2, borderBottom: '1px solid #f0f0f0' }}>
-        <Box display="flex" alignItems="center" gap={1.5} mb={2}>
-          <Avatar sx={{ bgcolor: '#2C3E50', width: 32, height: 32, fontSize: 16, fontWeight: 'bold', color: '#D4AF37' }}>H</Avatar>
-          <Typography variant="h6" fontWeight="800" color="#2C3E50">Hogist CRM</Typography>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+           {/* LEFT: Logo & Title */}
+           <Box display="flex" alignItems="center" gap={1.5}>
+              <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+              <Typography variant="h6" fontWeight="800" color="#2C3E50">Hogist CRM</Typography>
+           </Box>
+           
+           {/* RIGHT: Notifications & Logout */}
+           <Box display="flex" alignItems="center" gap={0.5}>
+               {/* 1. NOTIFICATION BELL (Moved Here) */}
+               <IconButton onClick={(e) => { setNotifAnchor(e.currentTarget); fetchLogs(); }} size="small">
+                  <Badge variant="dot" color="error" invisible={loginLogs.length === 0}>
+                    <Notifications color="action" />
+                  </Badge>
+               </IconButton>
+
+               {/* 2. LOGOUT BUTTON */}
+               <IconButton onClick={handleLogout} size="small" color="error" title="Logout">
+                   <Logout />
+               </IconButton>
+           </Box>
         </Box>
+
+        {/* --- PASTE THE MENU COMPONENT HERE --- */}
+        <Menu
+            anchorEl={notifAnchor}
+            open={Boolean(notifAnchor)}
+            onClose={() => setNotifAnchor(null)}
+            PaperProps={{ sx: { width: 320, maxHeight: 400, borderRadius: 3, mt: 1 } }}
+            transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+        >
+            <Box sx={{ p: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" fontWeight="800">Login Activity</Typography>
+                <Typography variant="caption" color="primary" sx={{ cursor:'pointer' }} onClick={fetchLogs}>Refresh</Typography>
+            </Box>
+            <Divider />
+            {loginLogs.length === 0 ? (
+                <Box p={2} textAlign="center"><Typography variant="caption">No logs found</Typography></Box>
+            ) : (
+                loginLogs.map((log, i) => (
+                    <MenuItem key={i} sx={{ gap: 1.5, alignItems: 'flex-start', py: 1.5, borderBottom: '1px solid #f5f5f5' }}>
+                        <Box mt={0.5}>
+                            {log.status === 'Success' 
+                                ? <Security fontSize="small" color="success" /> 
+                                : <ErrorOutline fontSize="small" color="error" />
+                            }
+                        </Box>
+                        <Box>
+                            <Typography variant="body2" fontWeight="600" color="#2C3E50">
+                                {log.username} 
+                                <span style={{ 
+                                    fontWeight: 400, marginLeft: 6, fontSize: '0.75rem', padding: '2px 6px', 
+                                    borderRadius: 4, backgroundColor: log.status === 'Success' ? '#E6FFFA' : '#FFF5F5',
+                                    color: log.status === 'Success' ? '#276749' : '#C53030'
+                                }}>
+                                    {log.status}
+                                </span>
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                {new Date(log.timestamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' })}
+                            </Typography>
+                            <Typography variant="caption" color="#A0AEC0" fontFamily="monospace">IP: {log.ip_address}</Typography>
+                        </Box>
+                    </MenuItem>
+                ))
+            )}
+        </Menu>
+        {/* ------------------------------------ */}
+
         <Paper elevation={0} sx={{ p: '6px 12px', display: 'flex', alignItems: 'center', borderRadius: 3, bgcolor: '#F8F9FA', border: '1px solid #E9ECEF' }}>
           <Search sx={{ color: '#A0AEC0' }} />
           <InputBase sx={{ ml: 1, flex: 1, fontSize: 14 }} placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -188,15 +380,15 @@ const Dashboard = () => {
 
           return (
             <ListItemButton
-              key={chat.chat_id}
+                        key={chat.chat_id}
               selected={activeChatId === chat.chat_id}
               onClick={() => setActiveChatId(chat.chat_id)}
               sx={{
                 borderRadius: 3,
                 mb: 0.5,
                 p: 1.5,
-                bgcolor: activeChatId === chat.chat_id ? '#FDF8EC' : 'transparent',
-                borderLeft: activeChatId === chat.chat_id ? '4px solid #D4AF37' : '4px solid transparent',
+                bgcolor: activeChatId === chat.chat_id ? '#FEF2F2' : 'transparent', // Light red background
+                borderLeft: activeChatId === chat.chat_id ? '4px solid #C30B0B' : '4px solid transparent', // Logo Red border
                 transition: 'all 0.2s',
               }}
             >
@@ -217,7 +409,7 @@ const Dashboard = () => {
                   }}
                 >
                   <Avatar sx={{
-                    bgcolor: activeChatId === chat.chat_id ? '#D4AF37' : '#EDF2F7',
+                    bgcolor: activeChatId === chat.chat_id ? '#C30B0B' : '#EDF2F7',
                     color: activeChatId === chat.chat_id ? 'white' : '#4A5568',
                     fontWeight: 'bold'
                   }}>
@@ -228,8 +420,13 @@ const Dashboard = () => {
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" fontWeight={isUnread ? "800" : "600"} color="#2D3748" noWrap sx={{ maxWidth: '80%' }}>
+                  <Typography variant="body2" fontWeight={isUnread ? "800" : "600"} color="#2D3748" noWrap sx={{ maxWidth: '75%' }}>
                     {name} <span style={{ fontWeight: 400, color: '#718096', fontSize: '0.85em' }}>{locString}</span>
+                  </Typography>
+                  
+                  {/* Add the Timestamp here */}
+                  <Typography variant="caption" sx={{ color: isUnread ? '#E53E3E' : '#718096', fontWeight: isUnread ? 700 : 400, fontSize: '0.75rem', whiteSpace: 'nowrap', ml: 1 }}>
+                    {formatWhatsAppDate(chat.updated_at)}
                   </Typography>
                 </Box>
 
@@ -258,33 +455,39 @@ const Dashboard = () => {
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: '#FAFAFA', borderColor: '#E9ECEF', mb: 3 }}>
         <Box display="flex" justifyContent="space-between" mb={1}>
           <Typography variant="caption" fontWeight="bold">DATA COMPLETENESS</Typography>
-          <Typography variant="caption" fontWeight="bold" color={leadScore > 75 ? "success.main" : "warning.main"}>{leadScore}%</Typography>
+          <Typography variant="caption" fontWeight="bold" sx={{ color: leadScore > 75 ? "#2e7d32" : "#C30B0B" }}>{leadScore}%</Typography>
         </Box>
-        <LinearProgress variant="determinate" value={leadScore} color={leadScore > 75 ? "success" : "warning"} sx={{ height: 8, borderRadius: 5 }} />
+        <LinearProgress variant="determinate" value={leadScore} sx={{ height: 8, borderRadius: 5, "& .MuiLinearProgress-bar": { bgcolor: leadScore > 75 ? "#2e7d32" : "#C30B0B" } }} />
       </Paper>
 
       <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Avatar sx={{ width: 72, height: 72, mx: 'auto', bgcolor: '#FFF8E1', color: '#D4AF37', fontSize: 28, mb: 1.5, border: '1px solid #F0E68C' }}>
+        <Avatar sx={{ width: 72, height: 72, mx: 'auto', bgcolor: '#FEF2F2', color: '#C30B0B', fontSize: 28, mb: 1.5, border: '1px solid #FEE2E2' }}>
           {activeLeadData.customer_name?.[0] || "G"}
         </Avatar>
         <Typography variant="h6" fontWeight="800" color="#2C3E50">{activeLeadData.customer_name || "Guest"}</Typography>
 
         <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.8 }}>
           <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#555', fontWeight: 500, fontSize: '0.9rem' }}>
-            <Phone fontSize="small" sx={{ color: '#D4AF37' }} /> {activeLeadData.contact_number || "-"}
+            <Phone fontSize="small" sx={{ color: '#C30B0B' }} /> {activeLeadData.contact_number || "-"}
           </Typography>
           {activeLeadData.email && (
             <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#555', fontWeight: 500, fontSize: '0.9rem' }}>
-              <Mail fontSize="small" sx={{ color: '#D4AF37' }} /> {activeLeadData.email}
+              <Mail fontSize="small" sx={{ color: '#C30B0B' }}/> {activeLeadData.email}
             </Typography>
           )}
+          {/* Creation Date */}
+            <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#555', fontWeight: 500, fontSize: '0.9rem' }}>
+              <CalendarMonth fontSize="small" sx={{ color: '#C30B0B' }} /> 
+              {/* Gets date from the chat list object */}
+              {formatDateOnly(chats.find(c => c.chat_id === activeChatId)?.created_at || chats.find(c => c.chat_id === activeChatId)?.updated_at)}
+            </Typography>
         </Box>
       </Box>
 
-      <Paper sx={{ p: 2.5, mb: 3, bgcolor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 3, boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+      <Paper sx={{ p: 2, bgcolor: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: 2 , boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
         <Box display="flex" alignItems="center" gap={1} mb={2} pb={1} borderBottom="1px dashed #E0E0E0">
-          <Description fontSize="small" sx={{ color: '#D4AF37' }} />
-          <Typography variant="subtitle2" fontWeight="800" color="#2C3E50">LEAD SUMMARY</Typography>
+          <Description fontSize="small" sx={{ color: '#C30B0B' }} />
+          <Typography variant="caption" fontWeight="bold" color="#C30B0B" sx={{ mb: 1, display: 'block' }}>INTERNAL NOTES</Typography>
         </Box>
 
         {loadingSummary ? (
@@ -319,20 +522,6 @@ const Dashboard = () => {
           </Box>
         ))}
       </Box>
-
-      <Paper sx={{ p: 2, bgcolor: '#FFFBEA', border: '1px solid #F0E68C', borderRadius: 2 }}>
-        <Typography variant="caption" fontWeight="bold" color="#B7950B" sx={{ mb: 1, display: 'block' }}>INTERNAL NOTES</Typography>
-        <TextField
-          fullWidth
-          multiline
-          rows={2}
-          placeholder="Add admin note..."
-          value={internalNote}
-          onChange={(e) => setInternalNote(e.target.value)}
-          variant="standard"
-          InputProps={{ disableUnderline: true }}
-        />
-      </Paper>
     </Box>
   );
 
@@ -388,17 +577,92 @@ const Dashboard = () => {
                   </Box>
                 </Box>
 
-                {isMobile && <IconButton onClick={() => setShowMobileDetails(true)} color="primary"><Info /></IconButton>}
-                {!isMobile && (
-                  <>
-                    <IconButton><Notifications /></IconButton>
-                    <Avatar sx={{ ml: 2, bgcolor: '#2C3E50', width: 34, height: 34 }}>A</Avatar>
-                  </>
+                {isMobile && (
+                  <IconButton onClick={() => setShowMobileDetails(true)} color="primary">
+                    <Info />
+                  </IconButton>
                 )}
+
+                {/* Unified Admin Avatar - Removed the duplicate entry and corrected logic */}
+                {!isMobile && (
+                  <Avatar sx={{ ml: 2, bgcolor: '#2C3E50', width: 34, height: 34 }}>A</Avatar>
+                )}
+
+                <Menu
+                  anchorEl={notifAnchor}
+                  open={Boolean(notifAnchor)}
+                  onClose={() => setNotifAnchor(null)}
+                  PaperProps={{ sx: { width: 320, maxHeight: 400, borderRadius: 3, mt: 1 } }}
+                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                >
+                  <Box sx={{ p: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="subtitle2" fontWeight="800">Login Activity</Typography>
+                    <Typography variant="caption" color="primary" sx={{ cursor: 'pointer' }} onClick={fetchLogs}>Refresh</Typography>
+                  </Box>
+                  <Divider />
+
+                  {loginLogs.length === 0 ? (
+                    <Box p={2} textAlign="center"><Typography variant="caption">No logs found</Typography></Box>
+                  ) : (
+                    loginLogs.map((log, i) => (
+                      <MenuItem key={i} sx={{ gap: 1.5, alignItems: 'flex-start', py: 1.5, borderBottom: '1px solid #f5f5f5' }}>
+                        <Box mt={0.5}>
+                          {log.status === 'Success'
+                            ? <Security fontSize="small" color="success" />
+                            : <ErrorOutline fontSize="small" color="error" />
+                          }
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" fontWeight="600" color="#2C3E50">
+                            {log.username}
+                            <span style={{
+                              fontWeight: 400,
+                              marginLeft: 6,
+                              fontSize: '0.75rem',
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              backgroundColor: log.status === 'Success' ? '#E6FFFA' : '#FFF5F5',
+                              color: log.status === 'Success' ? '#276749' : '#C53030'
+                            }}>
+                              {log.status}
+                            </span>
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                            {new Date(log.timestamp).toLocaleString('en-GB', {
+                              day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                            })}
+                          </Typography>
+                          <Typography variant="caption" color="#A0AEC0" fontFamily="monospace">
+                            IP: {log.ip_address}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))
+                  )}
+                </Menu>
               </Toolbar>
             </AppBar>
 
             <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+              {/* Start Date/Time Indicator */}
+              {activeMessages.length > 0 && (
+                <Box display="flex" justifyContent="center" mb={3} mt={1}>
+                  <Paper 
+                    elevation={0} 
+                    sx={{ 
+                      px: 2, py: 0.5, 
+                      bgcolor: '#E2E8F0', 
+                      borderRadius: 4, 
+                      border: '1px solid #CBD5E0'
+                    }}
+                  >
+                    <Typography variant="caption" color="#4A5568" fontWeight="600" fontSize="0.75rem">
+                      {formatFullDateTime(activeMessages[0].timestamp || chats.find(c => c.chat_id === activeChatId)?.updated_at)}
+                    </Typography>
+                  </Paper>
+                </Box>
+              )}
               {Array.isArray(activeMessages) && activeMessages.map((msg, idx) => (
                 <Box
                   key={idx}
@@ -415,7 +679,7 @@ const Dashboard = () => {
                         width: 32,
                         height: 32,
                         bgcolor: msg.role === 'user' ? '#fff' : '#2C3E50',
-                        color: msg.role === 'user' ? '#333' : '#D4AF37',
+                        color: msg.role === 'user' ? '#333' : 'white',
                         boxShadow: 1,
                         fontSize: 12
                       }}
@@ -424,19 +688,36 @@ const Dashboard = () => {
                     </Avatar>
 
                     <Paper
-                      elevation={1}
+                    elevation={1}
                       sx={{
-                        p: 2,
+                        p: 1.5, // Reduced padding slightly for tighter look
+                        px: 2,
                         borderRadius: 2,
                         bgcolor: msg.role === 'user' ? 'white' : '#2C3E50',
                         color: msg.role === 'user' ? '#2C3E50' : 'white',
                         borderTopLeftRadius: msg.role === 'user' ? 4 : 16,
-                        borderTopRightRadius: msg.role === 'user' ? 16 : 4
+                        borderTopRightRadius: msg.role === 'user' ? 16 : 4,
+                        minWidth: '120px', // Ensures space for time
+                        position: 'relative'
                       }}
                     >
-                      <Typography variant="body2" sx={{ lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                      <Typography variant="body2" sx={{ lineHeight: 1.5, whiteSpace: 'pre-wrap', mb: 0.5 }}>
                         {cleanText(msg.text)}
                       </Typography>
+
+                      {/* TIME STAMP */}
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                         <Typography 
+                           variant="caption" 
+                           sx={{ 
+                             fontSize: '0.65rem', 
+                             color: msg.role === 'user' ? '#718096' : 'rgba(255,255,255,0.7)',
+                             mt: -0.5 // Pulls it up slightly
+                           }}
+                         >
+                           {formatMessageTime(msg.timestamp)}
+                         </Typography>
+                      </Box>
                     </Paper>
                   </Box>
                 </Box>
