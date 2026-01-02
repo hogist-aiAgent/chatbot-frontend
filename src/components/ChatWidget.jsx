@@ -132,20 +132,24 @@ const ChatWidget = () => {
     <>
       <Fade in={isOpen}>
         <Paper
-          elevation={24}
-          sx={{
-            position: "fixed",
-            bottom: { xs: 15, sm: 40 },
-            right: { xs: 0, sm: 32 },
-            width: { xs: "100%", sm: 380 },
-            height: { xs: "100%", sm: 650 },
-            display: "flex",
-            flexDirection: "column",
-            zIndex: 9999,
-            borderRadius: { xs: "20px 20px 0 0", sm: 4 },
-            bgcolor: "#F8F9FA",
-          }}
-        >
+        elevation={24}
+        sx={{
+          position: "fixed",
+          bottom: { xs: 15, sm: 40 },
+          right: { xs: 0, sm: 32 },
+          width: { xs: "100%", sm: 380 },
+          height: { xs: "100%", sm: 650 },
+          display: "flex",
+          flexDirection: "column",
+          zIndex: 9999,
+          
+          borderRadius: "40px",      
+          overflow: "hidden",       
+          // ------------------------------
+
+          bgcolor: "#F8F9FA",
+        }}
+      >
           {/* HEADER */}
           <Box
             sx={{
@@ -250,76 +254,76 @@ const ChatWidget = () => {
 
                       {!isUser && idx === 0 && (
                         <Box 
-    mt={1.5} 
-    display="flex" 
-    gap={1} 
-    flexWrap="wrap" // Essential for the layout in Image 2
-    alignItems="center"
-  >
-    {/* Events Button */}
-    <Box
-      onClick={() => sendMessage("Events")}
-      sx={{
-        px: 1.5,
-        py: 0.6,
-        bgcolor: "#B11226",
-        color: "white",
-        borderRadius: "20px", // Forces the pill shape
-        cursor: "pointer",
-        fontSize: "0.85rem",
-        fontWeight: 600,
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        whiteSpace: "nowrap"
-      }}
-    >
-      🎉 Events
-    </Box>
+                          mt={1.5} 
+                          display="flex" 
+                          gap={1} 
+                          flexWrap="wrap" // Essential for the layout in Image 2
+                          alignItems="center"
+                        >
+                          {/* Events Button */}
+                          <Box
+                            onClick={() => sendMessage("Events")}
+                            sx={{
+                              px: 1.5,
+                              py: 0.6,
+                              bgcolor: "#B11226",
+                              color: "white",
+                              borderRadius: "20px", // Forces the pill shape
+                              cursor: "pointer",
+                              fontSize: "0.85rem",
+                              fontWeight: 600,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            🎉 Events
+                          </Box>
 
-    {/* Daily Meals Button */}
-    <Box
-      onClick={() => sendMessage("Daily Meals")}
-      sx={{
-        px: 1.5,
-        py: 0.6,
-        bgcolor: "#EDF2F7",
-        color: "#1A202C", // Darker text for readability
-        borderRadius: "20px",
-        cursor: "pointer",
-        fontSize: "0.85rem",
-        fontWeight: 600,
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        whiteSpace: "nowrap"
-      }}
-    >
-      🍱 Daily Meals
-    </Box>
+                          {/* Daily Meals Button */}
+                          <Box
+                            onClick={() => sendMessage("Daily Meals")}
+                            sx={{
+                              px: 1.5,
+                              py: 0.6,
+                              bgcolor: "#EDF2F7",
+                              color: "#1A202C", // Darker text for readability
+                              borderRadius: "20px",
+                              cursor: "pointer",
+                              fontSize: "0.85rem",
+                              fontWeight: 600,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            🍱 Daily Meals
+                          </Box>
 
-    {/* Others Button */}
-    <Box
-      onClick={() => sendMessage("Others")}
-      sx={{
-        px: 1.5,
-        py: 0.6,
-        bgcolor: "#6B7280",
-        color: "white",
-        borderRadius: "20px",
-        cursor: "pointer",
-        fontSize: "0.85rem",
-        fontWeight: 600,
-        display: "flex",
-        alignItems: "center",
-        gap: 0.5,
-        whiteSpace: "nowrap"
-      }}
-    >
-      📩 Others
-    </Box>
-  </Box>
-)}
+                          {/* Others Button */}
+                          <Box
+                            onClick={() => sendMessage("Others")}
+                            sx={{
+                              px: 1.5,
+                              py: 0.6,
+                              bgcolor: "#6B7280",
+                              color: "white",
+                              borderRadius: "20px",
+                              cursor: "pointer",
+                              fontSize: "0.85rem",
+                              fontWeight: 600,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            📩 Others
+                          </Box>
+                        </Box>
+                      )}
                     </Paper>
                   )}
                 </Box>
