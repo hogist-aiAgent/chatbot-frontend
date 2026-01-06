@@ -34,7 +34,7 @@ client.interceptors.response.use(
 export const api = {
   // Send chatbot message
   sendMessage: async (message, id = null) => {
-    const res = await client.post("/website-webhook", {
+    const res = await client.post("/website-chat", {
       message,
       id,
     });

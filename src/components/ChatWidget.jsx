@@ -73,6 +73,7 @@ const ChatWidget = () => {
     text.includes("Status:") &&
     text.includes("Guest Count:");
 
+    
   /* ------------------------------------
      SEND MESSAGE (merged logic)
   ------------------------------------ */
@@ -88,8 +89,7 @@ const ChatWidget = () => {
           role: "assistant",
           text:
             "Thanks for reaching out to Hogist 😊<br/>" +
-            "For any further queries, mail us at <b>support@hogist.com</b> " +
-            "or call <b>78945 61235</b>.",
+            "For any further queries, mail us at <b>support@hogist.com</b>.",
         },
       ]);
       return;
@@ -98,11 +98,16 @@ const ChatWidget = () => {
     setMessages((prev) => [...prev, { role: "user", text }]);
     setIsLoading(true);
 
-    try {
-      const res = await axios.post(`${API_BASE}/website-webhook`, {
-        message: text,
-        id: chatId,
-      });
+try {
+const res = await axios.post(`${API_BASE}/website-chat`, {
+  message: text,
+  chat_id: chatId,   // may be null on first call
+});
+
+// 🔥 THIS IS REQUIRED
+if (!chatId && res.data.chat_id) {
+  setChatId(res.data.chat_id);
+}
 
       setChatId(res.data.chat_id);
       setMessages((prev) => [
@@ -120,6 +125,7 @@ const ChatWidget = () => {
     }
   };
 
+  
   const handleSend = () => {
     sendMessage(input);
     setInput("");
@@ -138,7 +144,7 @@ const ChatWidget = () => {
           bottom: { xs: 15, sm: 40 },
           right: { xs: 0, sm: 32 },
           width: { xs: "100%", sm: 380 },
-          height: { xs: "100%", sm: 650 },
+          height: { xs: "100%", sm: 580 },
           display: "flex",
           flexDirection: "column",
           zIndex: 9999,
@@ -373,5 +379,6 @@ const ChatWidget = () => {
     </>
   );
 };
+
 
 export default ChatWidget;
