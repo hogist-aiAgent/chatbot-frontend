@@ -14,6 +14,7 @@ import {
   Logout, Security, ErrorOutline
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { API_BASE } from '../components/ChatWidget';
 
 const SIDEBAR_WIDTH = 360;
 const DETAILS_WIDTH = 400;
@@ -47,11 +48,7 @@ const cleanText = (text) => {
   return text.replace(/Current DateTime:.*$/gmi, '').trim();
 };
 
-// ✅ Single source of truth
-const API_BASE =
-  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-    ? "http://127.0.0.1:5005"
-    : (import.meta.env.VITE_API_BASE_URL);
+
 
 // ✅ axios defaults (optional but clean)
 const api = axios.create({
@@ -117,7 +114,7 @@ const Dashboard = () => {
 
     const verifySession = async () => {
         try {
-            await axios.post('http://127.0.0.1:5005/auth/verify-session', {}, {
+            await axios.post(`${API_BASE}/auth/verify-session`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
         } catch (error) {
@@ -131,7 +128,7 @@ const Dashboard = () => {
 
     // Check immediately and then every 5 seconds
     verifySession();
-    const interval = setInterval(verifySession, 5005);
+    const interval = setInterval(verifySession, API_BASE);
     return () => clearInterval(interval);
   }, [navigate]);
 
@@ -146,7 +143,7 @@ const Dashboard = () => {
       try {
         // In real prod, add headers here too. Skipping for now for chat list as it's less critical than write ops, 
         // but ideally: headers: { Authorization: `Bearer ${localStorage.getItem('hogist_token')}` }
-        const res = await axios.get('http://127.0.0.1:5005/website-get-all-chats');
+        const res = await axios.get(`${API_BASE}/website-get-all-chats`);
         setChats(res.data);
       } catch(e) {}
     };

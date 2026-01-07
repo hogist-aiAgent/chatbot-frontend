@@ -23,7 +23,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const res = await axios.post('http://127.0.0.1:5005/auth/login', credentials);
+      const res = await axios.post(`${API_BASE}/auth/login`, credentials);
       
       // Store Token
       localStorage.setItem('hogist_token', res.data.access_token);

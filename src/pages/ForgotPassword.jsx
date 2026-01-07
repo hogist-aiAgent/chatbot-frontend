@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Box, Paper, Typography, TextField, Button, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE } from '../components/ChatWidget';
 
 const ForgotPassword = () => {
   const [username, setUsername] = useState('');
@@ -11,7 +12,7 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://127.0.0.1:5005/auth/forgot-password', { username });
+      await axios.post(`${API_BASE}/auth/forgot-password`, { username });
       setMessage('If an account exists, a reset link has been sent to the system logs.');
     } catch (error) {
       setMessage('Error processing request.');
