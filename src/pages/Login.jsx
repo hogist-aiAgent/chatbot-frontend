@@ -5,6 +5,7 @@ import {
   Box, Paper, Typography, TextField, Button, Alert, InputAdornment, IconButton, CircularProgress 
 } from '@mui/material';
 import { Visibility, VisibilityOff, Lock, Person } from '@mui/icons-material';
+import { API_BASE } from './../components/ChatWidget';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
+console.log('Logging in with credentials:', credentials);
     try {
       const res = await axios.post(`${API_BASE}/auth/login`, credentials);
       
