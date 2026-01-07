@@ -20,6 +20,7 @@ import {
   WhatsApp,
 } from "@mui/icons-material";
 import axios from "axios";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 /* ------------------------------------
    API BASE URL
@@ -39,14 +40,19 @@ const ChatWidget = () => {
   const [chatId, setChatId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
-
+  const localChat = JSON.parse(localStorage.getItem("messgae") || "[]");
   const messagesEndRef = useRef(null);
 
   /* ------------------------------------
      INIT WELCOME
   ------------------------------------ */
   useEffect(() => {
-    if (messages.length === 0) {
+if (localChat.length !== 0) {
+      setMessages(localChat);
+    } 
+
+
+    if (messages.length === 0&& localChat.length===0) {
       setMessages([
         {
           role: "assistant",
@@ -56,12 +62,24 @@ const ChatWidget = () => {
           isWelcome: true,
         },
       ]);
+      localStorage.setItem("messgae", JSON.stringify([
+        {
+          role: "assistant",
+          text:
+            "Hi, I am <b>Lisa</b>, your Hogist assistant! 👩‍🍳<br/>" +
+            "I can help you plan meals for events or corporate needs.",
+          isWelcome: true,
+        },
+      ]));
     }
   }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    localStorage.setItem("messgae", JSON.stringify(messages));
   }, [messages, isOpen]);
+
+
 
   /* ------------------------------------
      HELPERS
@@ -96,6 +114,7 @@ const ChatWidget = () => {
     }
 
     setMessages((prev) => [...prev, { role: "user", text }]);
+    localStorage.setItem("messgae", JSON.stringify([...messages, { role: "user", text }]));
     setIsLoading(true);
 
 try {
@@ -118,12 +137,32 @@ if (!chatId && res.data.chat_id) {
           data: res.data.data,
         },
       ]);
+      localStorage.setItem("messgae", JSON.stringify([...messages, {
+          role: "assistant",
+          text: res.data.reply || "",
+          data: res.data.data,
+        },]));
     } catch (err) {
       console.error("Chat send failed:", err);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const resetChat = () => {
+  setMessages([
+    {
+      role: "assistant",
+      text:
+        "Hi, I am <b>Lisa</b>, your Hogist assistant! 👩‍🍳<br/>" +
+        "I can help you plan meals for events or corporate needs.",
+      isWelcome: true,
+    },
+  ]);
+  setChatId(null);
+  setInput("");
+  localStorage.removeItem("messgae");
+};
 
   
   const handleSend = () => {
@@ -343,19 +382,36 @@ if (!chatId && res.data.chat_id) {
             <div ref={messagesEndRef} />
           </Box>
 
-          {/* INPUT */}
-          <Box sx={{ p: 2, display: "flex", gap: 1 }}>
-            <TextField
-              fullWidth
-              placeholder="Type your request..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <Fab onClick={handleSend} disabled={!input.trim()}>
-              <Send />
-            </Fab>
-          </Box>
+{/* INPUT */}
+<Box sx={{ p: 2 }}>
+  <Box sx={{ display: "flex", gap: 1 }}>
+    <TextField
+      fullWidth
+      placeholder="Type your request..."
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && handleSend()}
+    />
+    <Fab onClick={handleSend} disabled={!input.trim()}>
+      <Send />
+    </Fab>
+  </Box>
+
+  {/* REFRESH / NEW CHAT */}
+  <Box mt={1} textAlign="center">
+    <IconButton
+      size="small"
+      onClick={resetChat}
+      sx={{ color: "#6B7280" }}
+    >
+      <RefreshIcon fontSize="small" />
+      <Typography variant="caption" ml={0.5}>
+        Start new conversation
+      </Typography>
+    </IconButton>
+  </Box>
+</Box>
+
         </Paper>
       </Fade>
 
