@@ -50,7 +50,7 @@ const cleanText = (text) => {
 // ✅ Single source of truth
 const API_BASE =
   (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-    ? "http://127.0.0.1:5000"
+    ? "http://127.0.0.1:5005"
     : (import.meta.env.VITE_API_BASE_URL);
 
 // ✅ axios defaults (optional but clean)
@@ -117,7 +117,7 @@ const Dashboard = () => {
 
     const verifySession = async () => {
         try {
-            await axios.post('http://127.0.0.1:5000/auth/verify-session', {}, {
+            await axios.post('http://127.0.0.1:5005/auth/verify-session', {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
         } catch (error) {
@@ -131,7 +131,7 @@ const Dashboard = () => {
 
     // Check immediately and then every 5 seconds
     verifySession();
-    const interval = setInterval(verifySession, 5000);
+    const interval = setInterval(verifySession, 5005);
     return () => clearInterval(interval);
   }, [navigate]);
 
@@ -146,7 +146,7 @@ const Dashboard = () => {
       try {
         // In real prod, add headers here too. Skipping for now for chat list as it's less critical than write ops, 
         // but ideally: headers: { Authorization: `Bearer ${localStorage.getItem('hogist_token')}` }
-        const res = await axios.get('http://127.0.0.1:5000/website-get-all-chats');
+        const res = await axios.get('http://127.0.0.1:5005/website-get-all-chats');
         setChats(res.data);
       } catch(e) {}
     };

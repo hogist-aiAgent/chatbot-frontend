@@ -11,7 +11,7 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://127.0.0.1:5000/auth/forgot-password', { username });
+      await axios.post('http://127.0.0.1:5005/auth/forgot-password', { username });
       setMessage('If an account exists, a reset link has been sent to the system logs.');
     } catch (error) {
       setMessage('Error processing request.');

@@ -20,7 +20,7 @@ const ResetPassword = () => {
     }
 
     try {
-      await axios.post('http://127.0.0.1:5000/auth/reset-password', { token, new_password: password });
+      await axios.post('http://127.0.0.1:5005/auth/reset-password', { token, new_password: password });
       setStatus({ type: 'success', msg: 'Password reset successfully!' });
       setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
