@@ -26,8 +26,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
    API BASE URL
 ------------------------------------ */
 export const API_BASE =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
+ false
     ? "http://127.0.0.1:5005"
     : import.meta.env.VITE_API_BASE_URL;
 
