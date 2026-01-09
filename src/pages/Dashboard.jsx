@@ -128,7 +128,7 @@ const Dashboard = () => {
 
     // Check immediately and then every 5 seconds
     verifySession();
-    const interval = setInterval(verifySession, API_BASE);
+    const interval = setInterval(verifySession,900000 ); 
     return () => clearInterval(interval);
   }, [navigate]);
 
@@ -138,19 +138,6 @@ const Dashboard = () => {
   };
 
   // 2. Fetch Chat List (Authenticated)
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        // In real prod, add headers here too. Skipping for now for chat list as it's less critical than write ops, 
-        // but ideally: headers: { Authorization: `Bearer ${localStorage.getItem('hogist_token')}` }
-        const res = await axios.get(`${API_BASE}/website-get-all-chats`);
-        setChats(res.data);
-      } catch(e) {}
-    };
-    fetch();
-    const interval = setInterval(fetch, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   // 1. Fetch Chat List
   useEffect(() => {
@@ -159,17 +146,16 @@ const Dashboard = () => {
         const res = await api.get('/website-get-all-chats');
         setChats(res.data);
       } catch (e) {
-        // Helpful debug for Vercel
-        console.error("❌ Failed to fetch chats:", API_BASE, e?.message || e);
+        console.error("❌ Failed to fetch chats:", e?.message);
       }
     };
 
-    fetchChats();
-    const interval = setInterval(fetchChats, 3000);
+    fetchChats(); // Fetch immediately on load
+    const interval = setInterval(fetchChats, 500000); // Check every 10 seconds instead of 3
     return () => clearInterval(interval);
   }, []);
 
-  // 2. Fetch Active Chat
+  // 2. Active Chat Message Fetcher (Runs every 10 seconds)
   useEffect(() => {
     if (!activeChatId) return;
 
@@ -183,7 +169,6 @@ const Dashboard = () => {
         setActiveMessages(res.data.messages || []);
         generateSummary(activeChatId);
       } catch (e) {
-        console.error("❌ Failed to fetch active chat:", e?.message || e);
         setLoadingSummary(false);
       }
     };
@@ -195,7 +180,7 @@ const Dashboard = () => {
         const res = await api.get(`/website-get-chat/${activeChatId}`);
         setActiveMessages(res.data.messages || []);
       } catch (e) {}
-    }, 4000);
+    }, 150000); // Check every 10 seconds
 
     return () => clearInterval(interval);
   }, [activeChatId]);
