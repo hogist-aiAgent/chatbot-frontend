@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Lock, Person } from '@mui/icons-material';
 import { API_BASE } from './../components/ChatWidget';
+import logo from '../../public/logo.png'
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ console.log('Logging in with credentials:', credentials);
         }}
       >
         <Box mb={3} display="flex" flexDirection="column" alignItems="center">
-           <img src="/logo.png" alt="Hogist" style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 15 }} />
+           <img src={logo} alt="Hogist" style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 15 }} />
            <Typography variant="h5" fontWeight="800" color="#2C3E50">Admin Login</Typography>
            <Typography variant="body2" color="text.secondary">Secure access to Hogist CRM</Typography>
         </Box>

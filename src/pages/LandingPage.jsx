@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { Groups, Bolt } from '@mui/icons-material';
 import ChatWidget from '../components/ChatWidget';
-
+import logo from '../../public/logo.png'
 const LandingPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -22,7 +22,7 @@ const LandingPage = () => {
             <Box display="flex" alignItems="center" gap={1}>
               {/* LOGO IMAGE */}
               <img 
-                src="/logo.png" 
+                src={logo}
                 alt="Hogist Logo" 
                 style={{ width: 40, height: 40, objectFit: 'contain' }} 
               />
