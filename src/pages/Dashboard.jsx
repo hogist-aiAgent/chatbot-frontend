@@ -15,7 +15,6 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { API_BASE } from '../components/ChatWidget';
-import logo from '../../../public/logo.png';
 
 const SIDEBAR_WIDTH = 360;
 const DETAILS_WIDTH = 400;
@@ -272,7 +271,7 @@ const Dashboard = () => {
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
            {/* LEFT: Logo & Title */}
            <Box display="flex" alignItems="center" gap={1.5}>
-              <img src={logo} alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+              <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
               <Typography variant="h6" fontWeight="800" color="#2C3E50">Hogist CRM</Typography>
            </Box>
            
