@@ -291,8 +291,11 @@ const ChatWidget = () => {
     size="small"
     value={input}
     inputProps={{
-      min: new Date().toISOString().split("T")[0], // blocks past dates
-    }}
+  min: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0], // blocks today and all past dates
+}}
+
     onChange={(e) => {
       const date = e.target.value;
       setInput(date);
