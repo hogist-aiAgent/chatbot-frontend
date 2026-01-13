@@ -38,7 +38,6 @@ const ChatWidget = () => {
     },
   ];
 
-
   useEffect(() => {
     if (localChat.length) {
       setMessages(localChat);
@@ -53,7 +52,6 @@ const ChatWidget = () => {
     localStorage.setItem("messgae", JSON.stringify(messages));
   }, [messages]);
 
-
   const startNewChat = () => {
     setMessages(welcomeMessage);
     setChatId(null);
@@ -61,7 +59,6 @@ const ChatWidget = () => {
     setExpectingDate(false);
     localStorage.setItem("messgae", JSON.stringify(welcomeMessage));
   };
-
 
   const sendMessage = async (text) => {
     if (!text.trim()) return;
@@ -77,7 +74,6 @@ const ChatWidget = () => {
 
       const reply = res.data.reply || "";
 
-      // Detect date request
       if (
         reply.toLowerCase().includes("event date") &&
         reply.toLowerCase().includes("calendar")
@@ -103,7 +99,6 @@ const ChatWidget = () => {
   const handleSend = () => {
     if (!input.trim()) return;
     sendMessage(input);
-    setInput("");
   };
 
   return (
@@ -164,61 +159,116 @@ const ChatWidget = () => {
               background: "linear-gradient(180deg,#F9FAFB,#F3F4F6)",
             }}
           >
-            {messages.map((msg, i) => (
-              <Box
-                key={i}
-                sx={{
-                  display: "flex",
-                  justifyContent:
-                    msg.role === "user" ? "flex-end" : "flex-start",
-                  gap: 1,
-                  mb: 2,
-                }}
-              >
-                {msg.role === "assistant" && (
-                  <Avatar src={avatarIcon} sx={{ width: 32, height: 32 }} />
-                )}
+            {messages.map((msg, i) => {
+              const isAssistant = msg.role === "assistant";
+              const isFirstAssistant = isAssistant && i === 0;
 
-                <Paper
-                  sx={{
-                    px: 1.6,
-                    py: 1.2,
-                    maxWidth: "70%",
-                    bgcolor: msg.role === "user" ? "#B11226" : "#FFFFFF",
-                    color: msg.role === "user" ? "white" : "#111827",
-                    borderRadius:
-                      msg.role === "user"
-                        ? "18px 18px 6px 18px"
-                        : "18px 18px 18px 6px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,.08)",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  <Typography
-                    dangerouslySetInnerHTML={{
-                      __html: msg.text.replace(/\n/g, "<br/>"),
-                    }}
-                  />
-                </Paper>
-
-                {msg.role === "user" && (
-                  <Avatar
+              return (
+                <Box key={i} mb={2}>
+                  <Box
                     sx={{
-                      width: 32,
-                      height: 32,
-                      bgcolor: "#E5E7EB",
-                      color: "#c60800",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
+                      display: "flex",
+                      justifyContent: isAssistant
+                        ? "flex-start"
+                        : "flex-end",
+                      gap: 1,
                     }}
                   >
-                    
-                  </Avatar>
-                )}
-              </Box>
-            ))}
+                    {isAssistant && (
+                      <Avatar src={avatarIcon} sx={{ width: 32, height: 32 }} />
+                    )}
+
+                    <Paper
+                      sx={{
+                        px: 1.6,
+                        py: 1.2,
+                        maxWidth: "70%",
+                        bgcolor: isAssistant ? "#FFFFFF" : "#B11226",
+                        color: isAssistant ? "#111827" : "white",
+                        borderRadius: isAssistant
+                          ? "18px 18px 18px 6px"
+                          : "18px 18px 6px 18px",
+                        boxShadow: "0 2px 6px rgba(0,0,0,.08)",
+                      }}
+                    >
+                      <Typography
+                        dangerouslySetInnerHTML={{
+                          __html: msg.text.replace(/\n/g, "<br/>"),
+                        }}
+                      />
+                    </Paper>
+                  </Box>
+
+                  {/* QUICK ACTION BUTTONS (ONLY UNDER FIRST AI MESSAGE) */}
+                  {/* QUICK ACTION BUTTONS (ONLY UNDER FIRST AI MESSAGE) */}
+{isFirstAssistant && (
+  <Box
+    sx={{
+      mt: 1.2,
+      pl: 5, // keeps alignment under assistant bubble (avatar space)
+      display: "flex",
+      gap: 1,
+      flexWrap: "wrap",
+    }}
+  >
+    {[
+      { label: "Events", emoji: "🎉", bg: "#B11226", fg: "#fff" },
+      { label: "Daily Meals", emoji: "🍱", bg: "#fff", fg: "#111827", border: "#E5E7EB" },
+      { label: "Others", emoji: "📩", bg: "#6B7280", fg: "#fff" },
+    ].map((btn) => (
+      <Box
+        key={btn.label}
+        onClick={() => sendMessage(btn.label)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") sendMessage(btn.label);
+        }}
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 0.8,
+          px: 1.4,
+          py: 0.7,
+          borderRadius: "999px",
+          cursor: "pointer",
+          userSelect: "none",
+
+          bgcolor: btn.bg,
+          color: btn.fg,
+          border: btn.border ? `1px solid ${btn.border}` : "1px solid transparent",
+
+          fontSize: "0.78rem",
+          fontWeight: 700,
+          letterSpacing: "0.1px",
+
+          boxShadow: btn.bg === "#fff" ? "0 1px 2px rgba(0,0,0,0.05)" : "0 3px 10px rgba(0,0,0,0.12)",
+
+          transition: "transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease",
+
+          "&:hover": {
+            transform: "translateY(-1px)",
+            boxShadow: btn.bg === "#fff"
+              ? "0 4px 12px rgba(0,0,0,0.08)"
+              : "0 6px 16px rgba(0,0,0,0.16)",
+            opacity: 0.96,
+          },
+
+          "&:active": {
+            transform: "translateY(0px) scale(0.98)",
+          },
+        }}
+      >
+        <span style={{ fontSize: "0.95rem", lineHeight: 1 }}>{btn.emoji}</span>
+        <span>{btn.label}</span>
+      </Box>
+    ))}
+  </Box>
+)}
+
+                </Box>
+              );
+            })}
 
             {isLoading && <CircularProgress size={20} />}
             <div ref={messagesEndRef} />
@@ -260,10 +310,7 @@ const ChatWidget = () => {
                         handleSend();
                       }
                     }}
-                    sx={{
-                      bgcolor: "#F3F4F6",
-                      borderRadius: "999px",
-                    }}
+                    sx={{ bgcolor: "#F3F4F6", borderRadius: "999px" }}
                   />
 
                   <Fab
