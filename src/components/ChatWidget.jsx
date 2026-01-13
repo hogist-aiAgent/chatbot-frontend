@@ -99,6 +99,7 @@ const ChatWidget = () => {
   const handleSend = () => {
     if (!input.trim()) return;
     sendMessage(input);
+    setInput("")
   };
 
   return (
@@ -284,18 +285,21 @@ const ChatWidget = () => {
           >
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               {expectingDate ? (
-                <TextField
-                  fullWidth
-                  type="date"
-                  size="small"
-                  value={input}
-                  onChange={(e) => {
-                    const date = e.target.value;
-                    setInput(date);
-                    sendMessage(date);
-                    setExpectingDate(false);
-                  }}
-                />
+              <TextField
+    fullWidth
+    type="date"
+    size="small"
+    value={input}
+    inputProps={{
+      min: new Date().toISOString().split("T")[0], // blocks past dates
+    }}
+    onChange={(e) => {
+      const date = e.target.value;
+      setInput(date);
+      sendMessage(date);
+      setExpectingDate(false);
+    }}
+  />
               ) : (
                 <>
                   <TextField
