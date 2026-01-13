@@ -209,12 +209,12 @@ const ChatWidget = () => {
                       width: 32,
                       height: 32,
                       bgcolor: "#E5E7EB",
-                      color: "#374151",
+                      color: "#c60800",
                       fontSize: "0.75rem",
                       fontWeight: 600,
                     }}
                   >
-                    U
+                    
                   </Avatar>
                 )}
               </Box>
