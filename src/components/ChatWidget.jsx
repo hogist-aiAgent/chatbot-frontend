@@ -15,9 +15,6 @@ import { Close, Send, WhatsApp, RestartAlt } from "@mui/icons-material";
 import axios from "axios";
 import avatarIcon from "../../public/download.png";
 
-/* ------------------------------------
-   API BASE
------------------------------------- */
 export const API_BASE =
   false ? "http://127.0.0.1:5005" : import.meta.env.VITE_API_BASE_URL;
 
@@ -41,9 +38,7 @@ const ChatWidget = () => {
     },
   ];
 
-  /* ------------------------------------
-     INIT
-  ------------------------------------ */
+
   useEffect(() => {
     if (localChat.length) {
       setMessages(localChat);
@@ -58,9 +53,7 @@ const ChatWidget = () => {
     localStorage.setItem("messgae", JSON.stringify(messages));
   }, [messages]);
 
-  /* ------------------------------------
-     NEW CHAT
-  ------------------------------------ */
+
   const startNewChat = () => {
     setMessages(welcomeMessage);
     setChatId(null);
@@ -69,9 +62,7 @@ const ChatWidget = () => {
     localStorage.setItem("messgae", JSON.stringify(welcomeMessage));
   };
 
-  /* ------------------------------------
-     SEND
-  ------------------------------------ */
+
   const sendMessage = async (text) => {
     if (!text.trim()) return;
 
@@ -115,9 +106,6 @@ const ChatWidget = () => {
     setInput("");
   };
 
-  /* ------------------------------------
-     UI
-  ------------------------------------ */
   return (
     <>
       <Fade in={isOpen}>
