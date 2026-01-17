@@ -28,7 +28,7 @@ const ChatWidget = () => {
 
   const messagesEndRef = useRef(null);
   const localChat = JSON.parse(localStorage.getItem("messgae") || "[]");
-
+  const id = localStorage.getItem("chat_id");
   const welcomeMessage = [
     {
       role: "assistant",
@@ -54,7 +54,8 @@ const ChatWidget = () => {
 
   const startNewChat = () => {
     setMessages(welcomeMessage);
-    setChatId(null);
+    setChatId(() => id ? id : null);
+
     setInput("");
     setExpectingDate(false);
     localStorage.setItem("messgae", JSON.stringify(welcomeMessage));
@@ -69,10 +70,11 @@ const ChatWidget = () => {
     try {
       const res = await axios.post(`${API_BASE}/website-chat`, {
         message: text,
-        chat_id: chatId,
+        chat_id: id || chatId,
       });
 
       const reply = res.data.reply || "";
+      localStorage.setItem("chat_id", res.data.chat_id);
 
       if (
         reply.toLowerCase().includes("event date") &&

@@ -195,11 +195,6 @@ const Dashboard = () => {
 
     verifySession();
 
-    // ✅ fixed: interval time should be a number (ms), not API_BASE
-    sessionIntervalRef.current = setInterval(verifySession, 5000);
-    return () => {
-      if (sessionIntervalRef.current) clearInterval(sessionIntervalRef.current);
-    };
   }, [navigate]);
 
   const handleLogout = useCallback(() => {
@@ -242,17 +237,18 @@ const Dashboard = () => {
     }
   }, []);
 
-  useEffect(() => {
-    setChatsLoading(true);
-    fetchChats();
+useEffect(() => {
+  setChatsLoading(true);
+  fetchChats();
 
+  if (chatsIntervalRef.current) clearInterval(chatsIntervalRef.current);
+  chatsIntervalRef.current = setInterval(fetchChats, 900000); 
+
+  return () => {
     if (chatsIntervalRef.current) clearInterval(chatsIntervalRef.current);
-    chatsIntervalRef.current = setInterval(fetchChats, 3000);
+  };
+}, [fetchChats]);
 
-    return () => {
-      if (chatsIntervalRef.current) clearInterval(chatsIntervalRef.current);
-    };
-  }, [fetchChats]);
 
   // ---------------------------------------------
   // FETCH: ACTIVE CHAT
@@ -299,13 +295,6 @@ const Dashboard = () => {
     fetchActiveChat(activeChatId);
     generateSummary(activeChatId);
 
-    // poll messages
-    if (activeIntervalRef.current) clearInterval(activeIntervalRef.current);
-    activeIntervalRef.current = setInterval(() => fetchActiveChat(activeChatId), 4000);
-
-    return () => {
-      if (activeIntervalRef.current) clearInterval(activeIntervalRef.current);
-    };
   }, [activeChatId, fetchActiveChat, generateSummary]);
 
   // ---------------------------------------------
