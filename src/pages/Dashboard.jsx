@@ -50,10 +50,14 @@ import {
   Security,
   ErrorOutline,
   Refresh,
+  WhatsApp,
 } from "@mui/icons-material";
+import ChatIcon from "@mui/icons-material/Chat";
+
 import { useTheme } from "@mui/material/styles";
 import { API_BASE } from "../components/ChatWidget";
 import logo from "../../public/logo.png";
+import { Tabs, Tab } from "@mui/material";
 
 const SIDEBAR_WIDTH = 360;
 const DETAILS_WIDTH = 400;
@@ -165,6 +169,9 @@ const Dashboard = () => {
   const [activeError, setActiveError] = useState("");
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState("");
+  const [selectedChat,setSelectedChat]=useState(null)
+
+const [chatSource, setChatSource] = useState("all");
 
   // intervals
   const chatsIntervalRef = useRef(null);
@@ -193,10 +200,16 @@ const Dashboard = () => {
       }
     };
 
+
+    console.log(loginLogs,"loginLogs")
+
     verifySession();
 
   }, [navigate]);
 
+
+
+ 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("hogist_token");
     navigate("/login");
@@ -259,6 +272,8 @@ useEffect(() => {
       setActiveError("");
       try {
         const res = await api.get(`/website-get-chat/${chatId}`);
+        setSelectedChat(res.data)
+        console.log(res.data,"res data")
         setActiveMessages(res.data?.messages || []);
       } catch (e) {
         setActiveError("Failed to load messages.");
@@ -268,6 +283,7 @@ useEffect(() => {
     },
     []
   );
+ 
 
   const generateSummary = useCallback(async (chatId) => {
     if (!chatId) return;
@@ -281,6 +297,38 @@ useEffect(() => {
       setLoadingSummary(false);
     }
   }, []);
+  
+
+  const getSourceIcon = (source) => {
+  if (source === "whatsapp") {
+    return (
+      <WhatsApp
+        sx={{
+          fontSize: 20,
+          color: "#22C55E",
+          bgcolor: "white",
+          borderRadius: "50%",
+          p: "2px",
+        }}
+      />
+    );
+  }
+else {
+    return (
+      <ChatIcon
+        sx={{
+          fontSize: 20,
+          color: "#2563EB",
+          bgcolor: "white",
+          borderRadius: "50%",
+          p: "2px",
+        }}
+      />
+    );
+  }
+
+  return null;
+};
 
   useEffect(() => {
     if (!activeChatId) return;
@@ -300,16 +348,34 @@ useEffect(() => {
   // ---------------------------------------------
   // DERIVED: FILTERED CHATS
   // ---------------------------------------------
-  const filteredChats = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return chats;
-    return chats.filter((chat) => {
-      const content = (chat.search_content || "").toLowerCase();
-      const name = (chat?.lead_data?.customer_name || "").toLowerCase();
-      const last = (chat?.last_message?.text || "").toLowerCase();
-      return content.includes(term) || name.includes(term) || last.includes(term);
-    });
-  }, [chats, search]);
+ const filteredChats = useMemo(() => {
+  const term = search.trim().toLowerCase();
+
+  return chats.filter((chat) => {
+    // 🔹 SOURCE FILTER
+    if (chatSource === "whatsapp" && chat.source !== "whatsapp") {
+      return false;
+    }
+
+    if (chatSource === "live" && chat.source === "whatsapp") {
+      return false;
+    }
+
+    // 🔹 SEARCH FILTER
+    if (!term) return true;
+
+    const content = (chat.search_content || "").toLowerCase();
+    const name = (chat?.lead_data?.customer_name || "").toLowerCase();
+    const last = (chat?.last_message?.text || "").toLowerCase();
+
+    return (
+      content.includes(term) ||
+      name.includes(term) ||
+      last.includes(term)
+    );
+  });
+}, [chats, search, chatSource]);
+
 
   // ---------------------------------------------
   // DERIVED: ACTIVE LEAD DATA (merge list + msg + summary parsing)
@@ -355,7 +421,12 @@ useEffect(() => {
     return Math.min(score, 100);
   }, [activeLeadData]);
 
+
+  console.log(filteredChats,"filteredChats")
+  
+
   // ---------------------------------------------
+
   // SESSION ERROR DIALOG
   // ---------------------------------------------
   if (sessionError) {
@@ -536,6 +607,8 @@ useEffect(() => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </Paper>
+{/* Chat Source Tabs */}
+
 
         {/* Errors */}
         {chatsError && (
@@ -565,7 +638,7 @@ useEffect(() => {
           filteredChats.map((chat) => {
             const data = chat.lead_data || {};
             const name = data.customer_name || "Guest";
-
+           console.log(chat,"chat")
             let locString = "";
             const rawLoc = data.delivery_location;
             if (Array.isArray(rawLoc) && rawLoc.length > 0) locString = `(${rawLoc[0]})`;
@@ -587,33 +660,26 @@ useEffect(() => {
                   transition: "all 0.2s",
                 }}
               >
-                <ListItemAvatar>
-                  <Badge
-                    color="error"
-                    variant="dot"
-                    invisible={!isUnread}
-                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                    sx={{
-                      "& .MuiBadge-badge": {
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        border: "2px solid white",
-                        bgcolor: "#E53E3E",
-                      },
-                    }}
-                  >
-                    <Avatar
-                      sx={{
-                        bgcolor: activeChatId === chat.chat_id ? "#C30B0B" : "#EDF2F7",
-                        color: activeChatId === chat.chat_id ? "white" : "#4A5568",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {name.charAt(0).toUpperCase()}
-                    </Avatar>
-                  </Badge>
-                </ListItemAvatar>
+               <ListItemAvatar>
+  <Badge
+    overlap="circular"
+    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+    badgeContent={getSourceIcon(chat.source)}
+  >
+    <Avatar
+      sx={{
+        bgcolor:
+          activeChatId === chat.chat_id ? "#C30B0B" : "#EDF2F7",
+        color:
+          activeChatId === chat.chat_id ? "white" : "#4A5568",
+        fontWeight: "bold",
+      }}
+    >
+      {name.charAt(0).toUpperCase()}
+    </Avatar>
+  </Badge>
+</ListItemAvatar>
+
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -786,7 +852,7 @@ useEffect(() => {
         <Typography variant="h6" fontWeight="800" color="#2C3E50">
           {activeLeadData.customer_name || "Guest"}
         </Typography>
-
+          
         <Stack sx={{ mt: 1.5 }} spacing={0.8} alignItems="center">
           <Typography
             variant="body2"
@@ -795,6 +861,24 @@ useEffect(() => {
             <Phone fontSize="small" sx={{ color: "#C30B0B" }} />
             {activeLeadData.contact_number || "-"}
           </Typography>
+          {
+            selectedChat?.source==="whatsapp"&&<Typography
+            variant="body2"
+            sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555", fontWeight: 500, fontSize: "0.9rem" }}
+          >
+            <WhatsApp fontSize="small" sx={{ color: "#C30B0B" }} />
+            {selectedChat?.phone || "-"}
+          </Typography>
+          }
+          
+          {/* <Typography
+            variant="body2"
+            sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555", fontWeight: 500, fontSize: "0.9rem" }}
+          >
+            <Phone fontSize="small" sx={{ color: "#C30B0B" }} />
+            {filteredChats.phone || "-"}
+          </Typography> */}
+          
 
           {activeLeadData.email && (
             <Typography
