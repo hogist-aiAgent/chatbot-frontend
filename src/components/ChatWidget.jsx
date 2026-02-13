@@ -57,7 +57,7 @@ const ChatWidget = () => {
     setChatId(() => id ? id : null);
 
     setInput("");
-    setExpectingDate(false);
+      (false);
     localStorage.setItem("messgae", JSON.stringify(welcomeMessage));
   };
 
@@ -75,14 +75,12 @@ const ChatWidget = () => {
 
       const reply = res.data.reply || "";
       localStorage.setItem("chat_id", res.data.chat_id);
-
       if (
-        reply.toLowerCase().includes("event date") &&
-        reply.toLowerCase().includes("calendar")
+        reply.includes("Please provide your event date in the format DD/MM/YYYY")
       ) {
         setExpectingDate(true);
       } else {
-        setExpectingDate(false);
+          setExpectingDate(false);
       }
 
       if (!chatId && res.data.chat_id) {
@@ -302,7 +300,7 @@ const ChatWidget = () => {
       const date = e.target.value;
       setInput(date);
       sendMessage(date);
-      setExpectingDate(false);
+        (false);
     }}
   />
               ) : (
