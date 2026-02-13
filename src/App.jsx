@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
 function App() {
+  console.log("version.2")
   return (
     <Routes>
       <Route path="*" element={<LandingPage />} />
