@@ -374,7 +374,7 @@ const ChatWidget = () => {
             }}
           >
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-              {true ? (
+              {expectingDate ? (
                 <TextField
                   fullWidth
                   type="date"
