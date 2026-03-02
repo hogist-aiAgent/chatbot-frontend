@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { Groups, Bolt } from '@mui/icons-material';
 import ChatWidget from '../components/ChatWidget';
+import WhatsAppChatBot from '../components/WhatsAppChatBot';
 import logo from '../../public/logo.png'
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -161,7 +162,7 @@ const LandingPage = () => {
           </Grid>
         </Grid>
       </Container>
-      
+      <WhatsAppChatBot phoneNumber={'+15557647627'}/>
       <ChatWidget />
     </Box>
   );

@@ -12,11 +12,14 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Close, Send, WhatsApp, RestartAlt } from "@mui/icons-material";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import axios from "axios";
 import avatarIcon from "../../public/download.png";
 
-export const API_BASE =
-  false ? "http://127.0.0.1:5005" : import.meta.env.VITE_API_BASE_URL;
+export const API_BASE = false
+  ? "http://127.0.0.1:5005"
+  : import.meta.env.VITE_API_BASE_URL;
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,13 +31,16 @@ const ChatWidget = () => {
 
   const messagesEndRef = useRef(null);
   const localChat = JSON.parse(localStorage.getItem("messgae") || "[]");
-  const id = localStorage.getItem("chat_id");
+  let id = localStorage.getItem("chat_id");
+  //   Hi, I am Lisa, your Virtual Assistant.
+  // Planning food for office, factory, or event?
+
   const welcomeMessage = [
     {
       role: "assistant",
       text:
-        "Hi, I am <b>Lisa</b>, your Hogist assistant.<br/>" +
-        "I can help you plan meals for events or corporate needs.",
+        "Hi, I am <b>Lisa</b>, your Virtual Assistant.<br/>" +
+        "Planning food for office, factory, or event?",
     },
   ];
 
@@ -51,13 +57,32 @@ const ChatWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     localStorage.setItem("messgae", JSON.stringify(messages));
   }, [messages]);
+  const dotStyle = (delay) => ({
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    backgroundColor: "#c60800",
+    animation: "typingBounce 1.4s infinite ease-in-out",
+    animationDelay: `${delay}s`,
 
+    "@keyframes typingBounce": {
+      "0%, 80%, 100%": {
+        transform: "scale(0.6)",
+        opacity: 0.4,
+      },
+      "40%": {
+        transform: "scale(1)",
+        opacity: 1,
+      },
+    },
+  });
   const startNewChat = () => {
     setMessages(welcomeMessage);
-    setChatId(() => id ? id : null);
-
+    setChatId(null);
+    id = null;
     setInput("");
-      (false);
+    false;
+    localStorage.removeItem("chat_id");
     localStorage.setItem("messgae", JSON.stringify(welcomeMessage));
   };
 
@@ -76,11 +101,13 @@ const ChatWidget = () => {
       const reply = res.data.reply || "";
       localStorage.setItem("chat_id", res.data.chat_id);
       if (
-        reply.includes("Please provide your event date in the format DD/MM/YYYY")
+        reply.includes(
+          "Please provide your event date in the format DD/MM/YYYY",
+        )
       ) {
         setExpectingDate(true);
       } else {
-          setExpectingDate(false);
+        setExpectingDate(false);
       }
 
       if (!chatId && res.data.chat_id) {
@@ -99,7 +126,7 @@ const ChatWidget = () => {
   const handleSend = () => {
     if (!input.trim()) return;
     sendMessage(input);
-    setInput("")
+    setInput("");
   };
 
   return (
@@ -125,8 +152,7 @@ const ChatWidget = () => {
             sx={{
               px: 2,
               py: 1.5,
-              background:
-                "linear-gradient(135deg,#8B0E1A,#B11226,#6F0B14)",
+              background: "linear-gradient(135deg,#8B0E1A,#B11226,#6F0B14)",
               color: "white",
               display: "flex",
               justifyContent: "space-between",
@@ -134,10 +160,39 @@ const ChatWidget = () => {
             }}
           >
             <Box display="flex" gap={1.5} alignItems="center">
-              <Avatar src={avatarIcon} sx={{ width: 38, height: 38 }} />
+              <Box position="relative">
+                <Avatar src={avatarIcon} sx={{ width: 38, height: 38 }} />
+
+                {/* Online Indicator */}
+                {/* <Box
+      sx={{
+        position: "absolute",
+        bottom: 2,
+        right: 2,
+        width: 10,
+        height: 10,
+        bgcolor: "#4CAF50",
+        borderRadius: "50%",
+        border: "2px solid white",
+      }}
+    /> */}
+              </Box>
+
               <Box>
                 <Typography fontWeight={700}>Lisa</Typography>
-                <Typography variant="caption">Hogist AI</Typography>
+
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    color: "#4CAF50",
+                    fontWeight: 600,
+                  }}
+                >
+                  ● Online
+                </Typography>
               </Box>
             </Box>
 
@@ -145,7 +200,10 @@ const ChatWidget = () => {
               <IconButton onClick={startNewChat} sx={{ color: "white" }}>
                 <RestartAlt />
               </IconButton>
-              <IconButton onClick={() => setIsOpen(false)} sx={{ color: "white" }}>
+              <IconButton
+                onClick={() => setIsOpen(false)}
+                sx={{ color: "white" }}
+              >
                 <Close />
               </IconButton>
             </Box>
@@ -169,9 +227,7 @@ const ChatWidget = () => {
                   <Box
                     sx={{
                       display: "flex",
-                      justifyContent: isAssistant
-                        ? "flex-start"
-                        : "flex-end",
+                      justifyContent: isAssistant ? "flex-start" : "flex-end",
                       gap: 1,
                     }}
                   >
@@ -202,76 +258,110 @@ const ChatWidget = () => {
 
                   {/* QUICK ACTION BUTTONS (ONLY UNDER FIRST AI MESSAGE) */}
                   {/* QUICK ACTION BUTTONS (ONLY UNDER FIRST AI MESSAGE) */}
-{isFirstAssistant && (
-  <Box
-    sx={{
-      mt: 1.2,
-      pl: 5, // keeps alignment under assistant bubble (avatar space)
-      display: "flex",
-      gap: 1,
-      flexWrap: "wrap",
-    }}
-  >
-    {[
-      { label: "Events", emoji: "🎉", bg: "#B11226", fg: "#fff" },
-      { label: "Daily Meals", emoji: "🍱", bg: "#fff", fg: "#111827", border: "#E5E7EB" },
-      { label: "Others", emoji: "📩", bg: "#6B7280", fg: "#fff" },
-    ].map((btn) => (
-      <Box
-        key={btn.label}
-        onClick={() => sendMessage(btn.label)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") sendMessage(btn.label);
-        }}
-        sx={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 0.8,
-          px: 1.4,
-          py: 0.7,
-          borderRadius: "999px",
-          cursor: "pointer",
-          userSelect: "none",
+                  {isFirstAssistant && (
+                    <Box
+                      sx={{
+                        mt: 1.2,
+                        pl: 5, // keeps alignment under assistant bubble (avatar space)
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {[
+                        {
+                          label: "Events",
+                          emoji: "🎉",
+                          bg: "#B11226",
+                          fg: "#fff",
+                        },
+                        {
+                          label: "Daily Meals",
+                          emoji: "🍱",
+                          bg: "#fff",
+                          fg: "#111827",
+                          border: "#E5E7EB",
+                        },
+                        {
+                          label: "Others",
+                          emoji: "📩",
+                          bg: "#6B7280",
+                          fg: "#fff",
+                        },
+                      ].map((btn) => (
+                        <Box
+                          key={btn.label}
+                          onClick={() => sendMessage(btn.label)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ")
+                              sendMessage(btn.label);
+                          }}
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 0.8,
+                            px: 1.4,
+                            py: 0.7,
+                            borderRadius: "999px",
+                            cursor: "pointer",
+                            userSelect: "none",
 
-          bgcolor: btn.bg,
-          color: btn.fg,
-          border: btn.border ? `1px solid ${btn.border}` : "1px solid transparent",
+                            bgcolor: btn.bg,
+                            color: btn.fg,
+                            border: btn.border
+                              ? `1px solid ${btn.border}`
+                              : "1px solid transparent",
 
-          fontSize: "0.78rem",
-          fontWeight: 700,
-          letterSpacing: "0.1px",
+                            fontSize: "0.78rem",
+                            fontWeight: 700,
+                            letterSpacing: "0.1px",
 
-          boxShadow: btn.bg === "#fff" ? "0 1px 2px rgba(0,0,0,0.05)" : "0 3px 10px rgba(0,0,0,0.12)",
+                            boxShadow:
+                              btn.bg === "#fff"
+                                ? "0 1px 2px rgba(0,0,0,0.05)"
+                                : "0 3px 10px rgba(0,0,0,0.12)",
 
-          transition: "transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease",
+                            transition:
+                              "transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease",
 
-          "&:hover": {
-            transform: "translateY(-1px)",
-            boxShadow: btn.bg === "#fff"
-              ? "0 4px 12px rgba(0,0,0,0.08)"
-              : "0 6px 16px rgba(0,0,0,0.16)",
-            opacity: 0.96,
-          },
+                            "&:hover": {
+                              transform: "translateY(-1px)",
+                              boxShadow:
+                                btn.bg === "#fff"
+                                  ? "0 4px 12px rgba(0,0,0,0.08)"
+                                  : "0 6px 16px rgba(0,0,0,0.16)",
+                              opacity: 0.96,
+                            },
 
-          "&:active": {
-            transform: "translateY(0px) scale(0.98)",
-          },
-        }}
-      >
-        <span style={{ fontSize: "0.95rem", lineHeight: 1 }}>{btn.emoji}</span>
-        <span>{btn.label}</span>
-      </Box>
-    ))}
-  </Box>
-)}
-
+                            "&:active": {
+                              transform: "translateY(0px) scale(0.98)",
+                            },
+                          }}
+                        >
+                          <span style={{ fontSize: "0.95rem", lineHeight: 1 }}>
+                            {btn.emoji}
+                          </span>
+                          <span>{btn.label}</span>
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
                 </Box>
               );
             })}
 
-            {isLoading && <CircularProgress size={20} />}
+            {isLoading && (
+              <Box display="flex" alignItems="center" gap={1}>
+                <Avatar src={avatarIcon} sx={{ width: 32, height: 32 }} />
+                <Box display="flex" gap={0.5}>
+                  <Box sx={dotStyle(0)} />
+                  <Box sx={dotStyle(0.2)} />
+                  <Box sx={dotStyle(0.4)} />
+                </Box>
+              </Box>
+            )}
             <div ref={messagesEndRef} />
           </Box>
 
@@ -284,25 +374,29 @@ const ChatWidget = () => {
             }}
           >
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-              {expectingDate ? (
-              <TextField
-    fullWidth
-    type="date"
-    size="small"
-    value={input}
-    inputProps={{
-  min: new Date(Date.now() + 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0], // blocks today and all past dates
-}}
+              {true ? (
+                <TextField
+                  fullWidth
+                  type="date"
+                  size="small"
+                  value={input}
+                  inputProps={{
+                    min: new Date(Date.now() + 24 * 60 * 60 * 1000)
+                      .toISOString()
+                      .split("T")[0], // blocks today and all past dates
+                  }}
+                  onChange={(e) => {
+                    const rawDate = e.target.value; // YYYY-MM-DD
 
-    onChange={(e) => {
-      const date = e.target.value;
-      setInput(date);
-      sendMessage(date);
-        (false);
-    }}
-  />
+                    if (rawDate) {
+                      const [year, month, day] = rawDate.split("-");
+                      const formattedDate = `${day}/${month}/${year}`; // DD/MM/YYYY
+console.log(formattedDate)
+                      setInput(formattedDate);
+                      sendMessage(formattedDate);
+                    }
+                  }}
+                />
               ) : (
                 <>
                   <TextField
@@ -348,13 +442,22 @@ const ChatWidget = () => {
               position: "fixed",
               bottom: 32,
               right: 32,
-              bgcolor: "#25D366",
-              color: "white",
-              boxShadow: "0 8px 24px rgba(37,211,102,.4)",
-              "&:hover": { bgcolor: "#20BA5A" },
+
+              background: "linear-gradient(135deg,#c60800,#ff3b30)",
+              color: "#fff",
+
+              boxShadow: "0 10px 28px rgba(198,8,0,.45)",
+
+              transition: "all .25s ease",
+
+              "&:hover": {
+                transform: "scale(1.08)",
+                background: "linear-gradient(135deg,#a80600,#e52e24)",
+                boxShadow: "0 14px 40px rgba(198,8,0,.65)",
+              },
             }}
           >
-            <WhatsApp />
+            <SupportAgentIcon />
           </Fab>
         </Tooltip>
       )}
