@@ -33,7 +33,7 @@ const pulse = keyframes`
 export default function ChatAssistant({isOpen,setIsOpen}) {
 
   /* Typing Control */
-  const fullText = "Hi 👋 Need assistance?";
+  const fullText = "Need more details? I'm here";
   const [typedText, setTypedText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [showHint, setShowHint] = useState(true);
