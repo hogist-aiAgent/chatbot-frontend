@@ -118,10 +118,7 @@ console.log('Logging in with credentials:', credentials);
             </Typography>
         </Box>
         </form>
-        
-        <Button onClick={() => navigate('/')} sx={{ textTransform: 'none', color: '#718096' }}>
-            Back to Home
-        </Button>
+
       </Paper>
     </Box>
   );

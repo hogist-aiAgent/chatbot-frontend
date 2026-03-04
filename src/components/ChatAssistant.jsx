@@ -30,8 +30,7 @@ const pulse = keyframes`
 
 /* ---------------- COMPONENT ---------------- */
 
-export default function ChatAssistant() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function ChatAssistant({isOpen,setIsOpen}) {
 
   /* Typing Control */
   const fullText = "Hi 👋 Need assistance?";
