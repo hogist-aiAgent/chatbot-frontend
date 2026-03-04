@@ -16,6 +16,7 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import axios from "axios";
 import avatarIcon from "../../public/download.png";
+import ChatAssistant from "./ChatAssistant";
 
 export const API_BASE = false
   ? "http://127.0.0.1:5005"
@@ -391,7 +392,7 @@ const ChatWidget = () => {
                     if (rawDate) {
                       const [year, month, day] = rawDate.split("-");
                       const formattedDate = `${day}/${month}/${year}`; // DD/MM/YYYY
-console.log(formattedDate)
+                      console.log(formattedDate);
                       setInput(formattedDate);
                       sendMessage(formattedDate);
                     }
@@ -435,31 +436,7 @@ console.log(formattedDate)
       </Fade>
 
       {!isOpen && (
-        <Tooltip title="Start Ordering">
-          <Fab
-            onClick={() => setIsOpen(true)}
-            sx={{
-              position: "fixed",
-              bottom: 32,
-              right: 32,
-
-              background: "linear-gradient(135deg,#c60800,#ff3b30)",
-              color: "#fff",
-
-              boxShadow: "0 10px 28px rgba(198,8,0,.45)",
-
-              transition: "all .25s ease",
-
-              "&:hover": {
-                transform: "scale(1.08)",
-                background: "linear-gradient(135deg,#a80600,#e52e24)",
-                boxShadow: "0 14px 40px rgba(198,8,0,.65)",
-              },
-            }}
-          >
-            <SupportAgentIcon />
-          </Fab>
-        </Tooltip>
+       <ChatAssistant isOpen={isOpen} setIsOpen={setIsOpen} />
       )}
     </>
   );

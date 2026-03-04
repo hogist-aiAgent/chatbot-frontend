@@ -184,7 +184,7 @@ const [chatSource, setChatSource] = useState("all");
   useEffect(() => {
     const token = localStorage.getItem("hogist_token");
     if (!token) {
-      navigate("/login");
+      navigate("/");
       return;
     }
 
@@ -212,7 +212,7 @@ const [chatSource, setChatSource] = useState("all");
  
   const handleLogout = useCallback(() => {
     localStorage.removeItem("hogist_token");
-    navigate("/login");
+    navigate("/");
   }, [navigate]);
 
   // ---------------------------------------------
@@ -440,7 +440,7 @@ else {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => navigate("/login")} variant="contained">
+          <Button onClick={() => navigate("/")} variant="contained">
             Back to Login
           </Button>
         </DialogActions>

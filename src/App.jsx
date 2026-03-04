@@ -8,10 +8,14 @@ import ResetPassword from './pages/ResetPassword';
 
 function App() {
   console.log("version 3")
+  let devMode=localStorage.getItem('DevMode')
   return (
     <Routes>
-      <Route path="*" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      {
+        devMode&&
+      <Route path="/devTest" element={<LandingPage />} />
+      }
+      <Route path="*" element={<LoginPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

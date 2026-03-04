@@ -31,7 +31,7 @@ const LandingPage = () => {
             </Box>
             <Button 
               variant="contained"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/')}
               sx={{ 
                 borderRadius: 50, 
                 px: 3,

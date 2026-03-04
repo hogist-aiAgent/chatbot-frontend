@@ -22,7 +22,7 @@ const ResetPassword = () => {
     try {
       await axios.post(`${API_BASE}/auth/reset-password`, { token, new_password: password });
       setStatus({ type: 'success', msg: 'Password reset successfully!' });
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => navigate('/'), 2000);
     } catch (error) {
       setStatus({ type: 'error', msg: 'Invalid or expired token.' });
     }

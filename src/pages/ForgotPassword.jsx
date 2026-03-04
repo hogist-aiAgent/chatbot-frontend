@@ -39,7 +39,7 @@ const ForgotPassword = () => {
             Send Reset Link
           </Button>
         </form>
-        <Button onClick={() => navigate('/login')} size="small">Back to Login</Button>
+        <Button onClick={() => navigate('/')} size="small">Back to Login</Button>
       </Paper>
     </Box>
   );
