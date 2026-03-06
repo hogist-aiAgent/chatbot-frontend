@@ -140,7 +140,7 @@ const ChatWidget = () => {
             bottom: { xs: 0, sm: 40 },
             right: { xs: 0, sm: 32 },
             width: { xs: "100%", sm: 380 },
-            height: { xs: "100%", sm: 580 },
+            height: { xs: "100%", sm: 500 },
             display: "flex",
             flexDirection: "column",
             borderRadius: { xs: 0, sm: "24px" },

@@ -30,8 +30,7 @@ const pulse = keyframes`
 
 /* ---------------- COMPONENT ---------------- */
 
-export default function ChatAssistant({isOpen,setIsOpen}) {
-
+export default function ChatAssistant({ isOpen, setIsOpen }) {
   /* Typing Control */
   const fullText = "Need more details? I'm here";
   const [typedText, setTypedText] = useState("");
@@ -92,7 +91,8 @@ export default function ChatAssistant({isOpen,setIsOpen}) {
             boxShadow: "0 8px 28px rgba(0,0,0,0.18)",
             fontWeight: 600,
             whiteSpace: "nowrap",
-animation: `${slideUp} .4s ease`,
+            zIndex: 9999, 
+            animation: `${slideUp} .4s ease`,
             "&::after": {
               content: '""',
               position: "absolute",
