@@ -29,7 +29,7 @@ const ChatWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
   const [expectingDate, setExpectingDate] = useState(false);
-
+  const [menuLink,setMenuLink]=useState('')
   const messagesEndRef = useRef(null);
   const localChat = JSON.parse(localStorage.getItem("messgae") || "[]");
   let id = localStorage.getItem("chat_id");
@@ -114,7 +114,8 @@ const ChatWidget = () => {
       if (!chatId && res.data.chat_id) {
         setChatId(res.data.chat_id);
       }
-
+      console.log(res.data.link.length?res.data.link:"")
+      setMenuLink(res.data.link.length?res.data.link:"")
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
     } catch (err) {
       console.error(err);
@@ -222,7 +223,8 @@ const ChatWidget = () => {
             {messages.map((msg, i) => {
               const isAssistant = msg.role === "assistant";
               const isFirstAssistant = isAssistant && i === 0;
-
+const showViewMenuButton =
+  msg.text?.toLowerCase().includes("browse our recommended menus");
               return (
                 <Box key={i} mb={2}>
                   <Box
@@ -256,6 +258,45 @@ const ChatWidget = () => {
                       />
                     </Paper>
                   </Box>
+                  {showViewMenuButton&&menuLink&&isAssistant&& (
+                    <Box
+                      sx={{
+                        mt: 1.2,
+                        pl: 5, // keeps alignment under assistant bubble (avatar space)
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Box
+                        onClick={() =>
+                          window.open(
+                            `${menuLink}`,
+                            "_blank",
+                          )
+                        }
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 0.8,
+                          px: 1.4,
+                          py: 0.7,
+                          borderRadius: "999px",
+                          cursor: "pointer",
+                          bgcolor: "#0F766E",
+                          color: "#fff",
+                          fontSize: "0.78rem",
+                          fontWeight: 700,
+                          boxShadow: "0 3px 10px rgba(0,0,0,0.12)",
+                          "&:hover": {
+                            transform: "translateY(-1px)",
+                          },
+                        }}
+                      >
+                        📋 View Menu
+                      </Box>
+                    </Box>
+                  )}
 
                   {/* QUICK ACTION BUTTONS (ONLY UNDER FIRST AI MESSAGE) */}
                   {/* QUICK ACTION BUTTONS (ONLY UNDER FIRST AI MESSAGE) */}
@@ -344,6 +385,7 @@ const ChatWidget = () => {
                           <span style={{ fontSize: "0.95rem", lineHeight: 1 }}>
                             {btn.emoji}
                           </span>
+
                           <span>{btn.label}</span>
                         </Box>
                       ))}
@@ -435,9 +477,7 @@ const ChatWidget = () => {
         </Paper>
       </Fade>
 
-      {!isOpen && (
-       <ChatAssistant isOpen={isOpen} setIsOpen={setIsOpen} />
-      )}
+      {!isOpen && <ChatAssistant isOpen={isOpen} setIsOpen={setIsOpen} />}
     </>
   );
 };
