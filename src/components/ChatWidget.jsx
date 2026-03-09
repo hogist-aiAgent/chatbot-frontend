@@ -29,7 +29,7 @@ const ChatWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
   const [expectingDate, setExpectingDate] = useState(false);
-  const [menuLink,setMenuLink]=useState('')
+  const [menuLink, setMenuLink] = useState("");
   const messagesEndRef = useRef(null);
   const localChat = JSON.parse(localStorage.getItem("messgae") || "[]");
   let id = localStorage.getItem("chat_id");
@@ -101,12 +101,8 @@ const ChatWidget = () => {
 
       const reply = res.data.reply || "";
       localStorage.setItem("chat_id", res.data.chat_id);
-      if (
-        reply.includes(
-          "Please provide your event date in the format DD/MM/YYYY",
-        )
-      ) {
-        setExpectingDate(true);
+      if (reply.includes("Please provide your event date")) {
+        setExpectingDate((prev) => !prev);
       } else {
         setExpectingDate(false);
       }
@@ -114,8 +110,8 @@ const ChatWidget = () => {
       if (!chatId && res.data.chat_id) {
         setChatId(res.data.chat_id);
       }
-      console.log(res.data.link.length?res.data.link:"")
-      setMenuLink(res.data.link.length?res.data.link:"")
+      console.log(res.data.link.length ? res.data.link : "");
+      setMenuLink(res.data.link.length ? res.data.link : "");
       setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
     } catch (err) {
       console.error(err);
@@ -223,8 +219,12 @@ const ChatWidget = () => {
             {messages.map((msg, i) => {
               const isAssistant = msg.role === "assistant";
               const isFirstAssistant = isAssistant && i === 0;
-const showViewMenuButton =
-  msg.text?.toLowerCase().includes("browse our recommended menus");
+              const isDateNeed =msg.text
+                ?.toLowerCase()
+                .includes("Please provide your event date");
+              const showViewMenuButton = msg.text
+                ?.toLowerCase()
+                .includes("browse our recommended menus");
               return (
                 <Box key={i} mb={2}>
                   <Box
@@ -258,7 +258,7 @@ const showViewMenuButton =
                       />
                     </Paper>
                   </Box>
-                  {showViewMenuButton&&menuLink&&isAssistant&& (
+                  {showViewMenuButton && menuLink && isAssistant && (
                     <Box
                       sx={{
                         mt: 1.2,
@@ -269,12 +269,7 @@ const showViewMenuButton =
                       }}
                     >
                       <Box
-                        onClick={() =>
-                          window.open(
-                            `${menuLink}`,
-                            "_blank",
-                          )
-                        }
+                        onClick={() => window.open(`${menuLink}`, "_blank")}
                         sx={{
                           display: "inline-flex",
                           alignItems: "center",
