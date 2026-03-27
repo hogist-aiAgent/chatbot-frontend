@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -145,6 +151,7 @@ const Dashboard = () => {
   // data
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
+  const [activeChatIdSource, setActiveChatIdSource] = useState(null);
   const [activeMessages, setActiveMessages] = useState([]);
 
   // UI state
@@ -169,9 +176,9 @@ const Dashboard = () => {
   const [activeError, setActiveError] = useState("");
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState("");
-  const [selectedChat,setSelectedChat]=useState(null)
+  const [selectedChat, setSelectedChat] = useState(null);
 
-const [chatSource, setChatSource] = useState("all");
+  const [chatSource, setChatSource] = useState("all");
 
   // intervals
   const chatsIntervalRef = useRef(null);
@@ -189,27 +196,22 @@ const [chatSource, setChatSource] = useState("all");
     }
 
     const verifySession = async () => {
-      try {
-        await api.post("/auth/verify-session", {});
-      } catch (error) {
-        const status = error?.response?.status;
-        if (status === 409 || status === 401) {
-          setSessionError(true);
-          localStorage.removeItem("hogist_token");
-        }
-      }
+      // try {
+      //   await api.post("/auth/verify-session", {});
+      // } catch (error) {
+      //   const status = error?.response?.status;
+      //   if (status === 409 || status === 401) {
+      //     setSessionError(true);
+      //     localStorage.removeItem("hogist_token");
+      //   }
+      // }
     };
 
-
-    console.log(loginLogs,"loginLogs")
+    console.log(loginLogs, "loginLogs");
 
     verifySession();
-
   }, [navigate]);
 
-
-
- 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("hogist_token");
     navigate("/");
@@ -250,46 +252,47 @@ const [chatSource, setChatSource] = useState("all");
     }
   }, []);
 
-useEffect(() => {
-  setChatsLoading(true);
-  fetchChats();
+  useEffect(() => {
+    setChatsLoading(true);
+    fetchChats();
 
-  if (chatsIntervalRef.current) clearInterval(chatsIntervalRef.current);
-  chatsIntervalRef.current = setInterval(fetchChats, 900000); 
-
-  return () => {
     if (chatsIntervalRef.current) clearInterval(chatsIntervalRef.current);
-  };
-}, [fetchChats]);
+    chatsIntervalRef.current = setInterval(fetchChats, 900000);
 
+    return () => {
+      if (chatsIntervalRef.current) clearInterval(chatsIntervalRef.current);
+    };
+  }, [fetchChats]);
 
   // ---------------------------------------------
   // FETCH: ACTIVE CHAT
   // ---------------------------------------------
-  const fetchActiveChat = useCallback(
-    async (chatId) => {
-      if (!chatId) return;
-      setActiveError("");
-      try {
-        const res = await api.get(`/website-get-chat/${chatId}`);
-        setSelectedChat(res.data)
-        console.log(res.data,"res data")
-        setActiveMessages(res.data?.messages || []);
-      } catch (e) {
-        setActiveError("Failed to load messages.");
-      } finally {
-        setActiveLoading(false);
-      }
-    },
-    []
-  );
- 
+  const fetchActiveChat = useCallback(async (chatId, chatIdSource) => {
+    if (!chatId) return;
+    setActiveError("");
+    try {
+      console.log(chatIdSource, "chatIdSource");
+      const res = await api.get(
+        `/website-get-chat/${chatId}?source=${chatIdSource}`,
+      );
+      setSelectedChat(res.data);
+      console.log(res.data, "res data");
+      setActiveMessages(res.data?.messages || []);
+    } catch (e) {
+      setActiveError("Failed to load messages.");
+    } finally {
+      setActiveLoading(false);
+    }
+  }, []);
 
-  const generateSummary = useCallback(async (chatId) => {
+  const generateSummary = useCallback(async (chatId, chatIdSource) => {
     if (!chatId) return;
     setLoadingSummary(true);
     try {
-      const res = await api.post("/website-generate-summary", { chat_id: chatId });
+      const res = await api.post(
+        `/website-generate-summary/${chatId}?source=${chatIdSource}`,
+        { chat_id: chatId },
+      );
       setSummary(res.data?.summary || "Summary unavailable.");
     } catch (e) {
       setSummary("Summary unavailable.");
@@ -297,38 +300,36 @@ useEffect(() => {
       setLoadingSummary(false);
     }
   }, []);
-  
 
   const getSourceIcon = (source) => {
-  if (source === "whatsapp") {
-    return (
-      <WhatsApp
-        sx={{
-          fontSize: 20,
-          color: "#22C55E",
-          bgcolor: "white",
-          borderRadius: "50%",
-          p: "2px",
-        }}
-      />
-    );
-  }
-else {
-    return (
-      <ChatIcon
-        sx={{
-          fontSize: 20,
-          color: "#2563EB",
-          bgcolor: "white",
-          borderRadius: "50%",
-          p: "2px",
-        }}
-      />
-    );
-  }
+    if (source === "whatsapp") {
+      return (
+        <WhatsApp
+          sx={{
+            fontSize: 20,
+            color: "#22C55E",
+            bgcolor: "white",
+            borderRadius: "50%",
+            p: "2px",
+          }}
+        />
+      );
+    } else {
+      return (
+        <ChatIcon
+          sx={{
+            fontSize: 20,
+            color: "#2563EB",
+            bgcolor: "white",
+            borderRadius: "50%",
+            p: "2px",
+          }}
+        />
+      );
+    }
 
-  return null;
-};
+    return null;
+  };
 
   useEffect(() => {
     if (!activeChatId) return;
@@ -340,42 +341,38 @@ else {
     setActiveMessages([]);
 
     // initial fetch + summary
-    fetchActiveChat(activeChatId);
-    generateSummary(activeChatId);
-
+    fetchActiveChat(activeChatId, activeChatIdSource);
+    generateSummary(activeChatId, activeChatIdSource);
   }, [activeChatId, fetchActiveChat, generateSummary]);
 
   // ---------------------------------------------
   // DERIVED: FILTERED CHATS
   // ---------------------------------------------
- const filteredChats = useMemo(() => {
-  const term = search.trim().toLowerCase();
+  const filteredChats = useMemo(() => {
+    const term = search.trim().toLowerCase();
 
-  return chats.filter((chat) => {
-    // 🔹 SOURCE FILTER
-    if (chatSource === "whatsapp" && chat.source !== "whatsapp") {
-      return false;
-    }
+    return chats.filter((chat) => {
+      // 🔹 SOURCE FILTER
+      if (chatSource === "whatsapp" && chat.source !== "whatsapp") {
+        return false;
+      }
 
-    if (chatSource === "live" && chat.source === "whatsapp") {
-      return false;
-    }
+      if (chatSource === "live" && chat.source === "whatsapp") {
+        return false;
+      }
 
-    // 🔹 SEARCH FILTER
-    if (!term) return true;
+      // 🔹 SEARCH FILTER
+      if (!term) return true;
 
-    const content = (chat.search_content || "").toLowerCase();
-    const name = (chat?.lead_data?.customer_name || "").toLowerCase();
-    const last = (chat?.last_message?.text || "").toLowerCase();
+      const content = (chat.search_content || "").toLowerCase();
+      const name = (chat?.lead_data?.customer_name || "").toLowerCase();
+      const last = (chat?.last_message?.text || "").toLowerCase();
 
-    return (
-      content.includes(term) ||
-      name.includes(term) ||
-      last.includes(term)
-    );
-  });
-}, [chats, search, chatSource]);
-
+      return (
+        content.includes(term) || name.includes(term) || last.includes(term)
+      );
+    });
+  }, [chats, search, chatSource]);
 
   // ---------------------------------------------
   // DERIVED: ACTIVE LEAD DATA (merge list + msg + summary parsing)
@@ -386,12 +383,20 @@ else {
     let data = { ...(listData || {}), ...(msgData || {}) };
 
     if (summary) {
-      const nameMatch = summary.match(/(?:Name|Customer):\**\s*(.*?)(?:\s*(?:Event|Date|-|\n)|$)/i);
-      const locMatch = summary.match(/(?:Location|at):\**\s*([A-Za-z\s,]+?)(?:\.|-|\n|$)/i);
-      const dateMatch = summary.match(/(?:Event Date|Date):\**\s*(.*?)(?:\s*(?:Guest|-|\n)|$)/i);
+      const nameMatch = summary.match(
+        /(?:Name|Customer):\**\s*(.*?)(?:\s*(?:Event|Date|-|\n)|$)/i,
+      );
+      const locMatch = summary.match(
+        /(?:Location|at):\**\s*([A-Za-z\s,]+?)(?:\.|-|\n|$)/i,
+      );
+      const dateMatch = summary.match(
+        /(?:Event Date|Date):\**\s*(.*?)(?:\s*(?:Guest|-|\n)|$)/i,
+      );
       const countMatch = summary.match(/(?:Guest Count|Guests):\**\s*(\d+)/i);
       const phoneMatch = summary.match(/(?:Contact|Phone).*?(\d{10})/i);
-      const emailMatch = summary.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/i);
+      const emailMatch = summary.match(
+        /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/i,
+      );
 
       if (!data.customer_name || data.customer_name === "Guest") {
         if (nameMatch?.[1]) data.customer_name = nameMatch[1].trim();
@@ -401,9 +406,11 @@ else {
         if (locMatch?.[1]) data.delivery_location = [locMatch[1].trim()];
         else if (statusLoc?.[1]) data.delivery_location = [statusLoc[1].trim()];
       }
-      if (!data.contact_number && phoneMatch?.[1]) data.contact_number = phoneMatch[1];
+      if (!data.contact_number && phoneMatch?.[1])
+        data.contact_number = phoneMatch[1];
       if (!data.email && emailMatch?.[1]) data.email = emailMatch[1];
-      if (!data.event_date_time && dateMatch?.[1]) data.event_date_time = dateMatch[1].trim();
+      if (!data.event_date_time && dateMatch?.[1])
+        data.event_date_time = dateMatch[1].trim();
       if (!data.count && countMatch?.[1]) data.count = countMatch[1].trim();
     }
 
@@ -413,7 +420,11 @@ else {
   const leadScore = useMemo(() => {
     if (!activeLeadData) return 0;
     let score = 0;
-    if (activeLeadData.customer_name && activeLeadData.customer_name !== "Guest") score += 30;
+    if (
+      activeLeadData.customer_name &&
+      activeLeadData.customer_name !== "Guest"
+    )
+      score += 30;
     if (activeLeadData.contact_number) score += 30;
     if (activeLeadData.delivery_location) score += 20;
     if (activeLeadData.event_type) score += 10;
@@ -421,9 +432,7 @@ else {
     return Math.min(score, 100);
   }, [activeLeadData]);
 
-
-  console.log(filteredChats,"filteredChats")
-  
+  console.log(filteredChats, "filteredChats");
 
   // ---------------------------------------------
 
@@ -435,8 +444,8 @@ else {
         <DialogTitle color="error">Session Terminated</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            You have been logged out because this account signed in from another device
-            or your session expired. Only one active session is allowed.
+            You have been logged out because this account signed in from another
+            device or your session expired. Only one active session is allowed.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -463,11 +472,25 @@ else {
     >
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: "1px solid #f0f0f0" }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={2}
+        >
           <Box display="flex" alignItems="center" gap={1.5}>
-            <img src={logo} alt="Logo" style={{ width: 40, height: 40, objectFit: "contain" }} />
+            <img
+              src={logo}
+              alt="Logo"
+              style={{ width: 40, height: 40, objectFit: "contain" }}
+            />
             <Box>
-              <Typography variant="h6" fontWeight="800" color="#2C3E50" lineHeight={1}>
+              <Typography
+                variant="h6"
+                fontWeight="800"
+                color="#2C3E50"
+                lineHeight={1}
+              >
                 Hogist CRM
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -485,7 +508,11 @@ else {
                 }}
                 size="small"
               >
-                <Badge variant="dot" color="error" invisible={loginLogs.length === 0}>
+                <Badge
+                  variant="dot"
+                  color="error"
+                  invisible={loginLogs.length === 0}
+                >
                   <Notifications color="action" />
                 </Badge>
               </IconButton>
@@ -510,11 +537,21 @@ else {
           anchorEl={notifAnchor}
           open={Boolean(notifAnchor)}
           onClose={() => setNotifAnchor(null)}
-          PaperProps={{ sx: { width: 340, maxHeight: 420, borderRadius: 3, mt: 1 } }}
+          PaperProps={{
+            sx: { width: 340, maxHeight: 420, borderRadius: 3, mt: 1 },
+          }}
           transformOrigin={{ horizontal: "left", vertical: "top" }}
           anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
         >
-          <Box sx={{ p: 2, pb: 1, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Box
+            sx={{
+              p: 2,
+              pb: 1,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <Typography variant="subtitle2" fontWeight="800">
               Login Activity
             </Typography>
@@ -545,7 +582,10 @@ else {
             </Box>
           ) : (
             loginLogs.map((log, i) => (
-              <MenuItem key={i} sx={{ gap: 1.5, alignItems: "flex-start", py: 1.5 }}>
+              <MenuItem
+                key={i}
+                sx={{ gap: 1.5, alignItems: "flex-start", py: 1.5 }}
+              >
                 <Box mt={0.5}>
                   {log.status === "Success" ? (
                     <Security fontSize="small" color="success" />
@@ -563,14 +603,20 @@ else {
                         fontSize: "0.75rem",
                         padding: "2px 6px",
                         borderRadius: 6,
-                        backgroundColor: log.status === "Success" ? "#E6FFFA" : "#FFF5F5",
+                        backgroundColor:
+                          log.status === "Success" ? "#E6FFFA" : "#FFF5F5",
                         color: log.status === "Success" ? "#276749" : "#C53030",
                       }}
                     >
                       {log.status}
                     </span>
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    sx={{ mt: 0.5 }}
+                  >
                     {new Date(log.timestamp).toLocaleString("en-GB", {
                       day: "2-digit",
                       month: "short",
@@ -578,7 +624,11 @@ else {
                       minute: "2-digit",
                     })}
                   </Typography>
-                  <Typography variant="caption" color="#A0AEC0" fontFamily="monospace">
+                  <Typography
+                    variant="caption"
+                    color="#A0AEC0"
+                    fontFamily="monospace"
+                  >
                     IP: {log.ip_address}
                   </Typography>
                 </Box>
@@ -607,8 +657,7 @@ else {
             onChange={(e) => setSearch(e.target.value)}
           />
         </Paper>
-{/* Chat Source Tabs */}
-
+        {/* Chat Source Tabs */}
 
         {/* Errors */}
         {chatsError && (
@@ -625,7 +674,11 @@ else {
         {chatsLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
             <Box key={i} sx={{ px: 1, py: 1 }}>
-              <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 3 }} />
+              <Skeleton
+                variant="rectangular"
+                height={64}
+                sx={{ borderRadius: 3 }}
+              />
             </Box>
           ))
         ) : filteredChats.length === 0 ? (
@@ -638,51 +691,72 @@ else {
           filteredChats.map((chat) => {
             const data = chat.lead_data || {};
             const name = data.customer_name || "Guest";
-           console.log(chat,"chat")
+            console.log(chat, "chat");
             let locString = "";
             const rawLoc = data.delivery_location;
-            if (Array.isArray(rawLoc) && rawLoc.length > 0) locString = `(${rawLoc[0]})`;
-            else if (typeof rawLoc === "string" && rawLoc.trim() !== "") locString = `(${rawLoc})`;
+            if (Array.isArray(rawLoc) && rawLoc.length > 0)
+              locString = `(${rawLoc[0]})`;
+            else if (typeof rawLoc === "string" && rawLoc.trim() !== "")
+              locString = `(${rawLoc})`;
 
-            const isUnread = chat.read_by_admin === false && activeChatId !== chat.chat_id;
+            const isUnread =
+              chat.read_by_admin === false && activeChatId !== chat.chat_id;
 
             return (
               <ListItemButton
                 key={chat.chat_id}
                 selected={activeChatId === chat.chat_id}
-                onClick={() => setActiveChatId(chat.chat_id)}
+                onClick={() => {
+                  console.log(chat.source, "chat list");
+                  setActiveChatId(chat.chat_id);
+                  setActiveChatIdSource(chat.source);
+                  setChats((prevChats) =>
+                    prevChats.map((c) =>
+                      c.chat_id === chat.chat_id
+                        ? { ...c, read_by_admin: true }
+                        : c,
+                    ),
+                  );
+                }}
                 sx={{
                   borderRadius: 3,
                   mb: 0.5,
                   p: 1.5,
-                  bgcolor: activeChatId === chat.chat_id ? "#FEF2F2" : "transparent",
-                  borderLeft: activeChatId === chat.chat_id ? "4px solid #C30B0B" : "4px solid transparent",
+                  bgcolor:
+                    activeChatId === chat.chat_id ? "#FEF2F2" : "transparent",
+                  borderLeft:
+                    activeChatId === chat.chat_id
+                      ? "4px solid #C30B0B"
+                      : "4px solid transparent",
                   transition: "all 0.2s",
                 }}
               >
-               <ListItemAvatar>
-  <Badge
-    overlap="circular"
-    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-    badgeContent={getSourceIcon(chat.source)}
-  >
-    <Avatar
-      sx={{
-        bgcolor:
-          activeChatId === chat.chat_id ? "#C30B0B" : "#EDF2F7",
-        color:
-          activeChatId === chat.chat_id ? "white" : "#4A5568",
-        fontWeight: "bold",
-      }}
-    >
-      {name.charAt(0).toUpperCase()}
-    </Avatar>
-  </Badge>
-</ListItemAvatar>
-
+                <ListItemAvatar>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                    badgeContent={getSourceIcon(chat.source)}
+                  >
+                    <Avatar
+                      sx={{
+                        bgcolor:
+                          activeChatId === chat.chat_id ? "#C30B0B" : "#EDF2F7",
+                        color:
+                          activeChatId === chat.chat_id ? "white" : "#4A5568",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {name.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </Badge>
+                </ListItemAvatar>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
                     <Typography
                       variant="body2"
                       fontWeight={isUnread ? "800" : "600"}
@@ -691,7 +765,13 @@ else {
                       sx={{ maxWidth: "75%" }}
                     >
                       {name}{" "}
-                      <span style={{ fontWeight: 400, color: "#718096", fontSize: "0.85em" }}>
+                      <span
+                        style={{
+                          fontWeight: 400,
+                          color: "#718096",
+                          fontSize: "0.85em",
+                        }}
+                      >
                         {locString}
                       </span>
                     </Typography>
@@ -710,16 +790,27 @@ else {
                     </Typography>
                   </Box>
 
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mt={0.5}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mt={0.5}
+                  >
                     <Typography
                       variant="caption"
                       color={isUnread ? "text.primary" : "text.secondary"}
                       noWrap
-                      sx={{ display: "block", maxWidth: "90%", fontWeight: isUnread ? 600 : 400 }}
+                      sx={{
+                        display: "block",
+                        maxWidth: "90%",
+                        fontWeight: isUnread ? 600 : 400,
+                      }}
                     >
                       {cleanText(chat.last_message?.text)}
                     </Typography>
-                    {isUnread && <Circle sx={{ width: 8, height: 8, color: "#E53E3E" }} />}
+                    {isUnread && (
+                      <Circle sx={{ width: 8, height: 8, color: "#E53E3E" }} />
+                    )}
                   </Box>
                 </Box>
               </ListItemButton>
@@ -734,7 +825,15 @@ else {
   // UI: DETAILS PANEL
   // ---------------------------------------------
   const DetailsPanel = (
-    <Box sx={{ p: 3, height: "100%", overflowY: "auto", bgcolor: "white", borderLeft: "1px solid #E0E0E0" }}>
+    <Box
+      sx={{
+        p: 3,
+        height: "100%",
+        overflowY: "auto",
+        bgcolor: "white",
+        borderLeft: "1px solid #E0E0E0",
+      }}
+    >
       {isMobile && (
         <Box display="flex" justifyContent="flex-end" mb={1}>
           <IconButton onClick={() => setShowMobileDetails(false)}>
@@ -743,96 +842,106 @@ else {
         </Box>
       )}
 
-    <Paper
-  variant="outlined"
-  sx={{
-    p: 2,
-    borderRadius: 3,
-    mb: 2,
-    bgcolor:
-      leadScore > 75 ? "#ECFDF5" : leadScore > 50 ? "#FFFBEB" : "#FEF2F2",
-    borderColor:
-      leadScore > 75 ? "#A7F3D0" : leadScore > 50 ? "#FDE68A" : "#FECACA"
-  }}
->
-  {/* Top row */}
-  <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-    <Typography variant="caption" fontWeight={700}>
-      Lead Quality
-    </Typography>
-
-    <Box display="flex" alignItems="center" gap={1}>
-      <Typography
-        variant="caption"
-        fontWeight={800}
+      <Paper
+        variant="outlined"
         sx={{
-          color:
-            leadScore > 75 ? "#047857" :
-            leadScore > 50 ? "#92400E" :
-            "#991B1B"
+          p: 2,
+          borderRadius: 3,
+          mb: 2,
+          bgcolor:
+            leadScore > 75 ? "#ECFDF5" : leadScore > 50 ? "#FFFBEB" : "#FEF2F2",
+          borderColor:
+            leadScore > 75 ? "#A7F3D0" : leadScore > 50 ? "#FDE68A" : "#FECACA",
         }}
       >
-        {leadScore}%
-      </Typography>
+        {/* Top row */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={0.5}
+        >
+          <Typography variant="caption" fontWeight={700}>
+            Lead Quality
+          </Typography>
 
-      <Chip
-        size="small"
-        label={
-          leadScore > 75 ? "Strong" :
-          leadScore > 50 ? "Medium" :
-          "Weak"
-        }
-        sx={{
-          height: 18,
-          fontSize: "0.65rem",
-          fontWeight: 700,
-          bgcolor:
-            leadScore > 75 ? "#10B981" :
-            leadScore > 50 ? "#F59E0B" :
-            "#EF4444",
-          color: "white"
-        }}
-      />
-    </Box>
-  </Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography
+              variant="caption"
+              fontWeight={800}
+              sx={{
+                color:
+                  leadScore > 75
+                    ? "#047857"
+                    : leadScore > 50
+                      ? "#92400E"
+                      : "#991B1B",
+              }}
+            >
+              {leadScore}%
+            </Typography>
 
-  {/* Progress bar */}
-  <LinearProgress
-    variant="determinate"
-    value={leadScore}
-    sx={{
-      height: 6,
-      borderRadius: 5,
-      bgcolor: "#E5E7EB",
-      "& .MuiLinearProgress-bar": {
-        bgcolor:
-          leadScore > 75 ? "#10B981" :
-          leadScore > 50 ? "#F59E0B" :
-          "#EF4444"
-      }
-    }}
-  />
+            <Chip
+              size="small"
+              label={
+                leadScore > 75 ? "Strong" : leadScore > 50 ? "Medium" : "Weak"
+              }
+              sx={{
+                height: 18,
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                bgcolor:
+                  leadScore > 75
+                    ? "#10B981"
+                    : leadScore > 50
+                      ? "#F59E0B"
+                      : "#EF4444",
+                color: "white",
+              }}
+            />
+          </Box>
+        </Box>
 
-  {/* Helper text */}
-  <Typography
-    variant="caption"
-    sx={{
-      display: "block",
-      mt: 0.8,
-      color:
-        leadScore > 75 ? "#065F46" :
-        leadScore > 50 ? "#92400E" :
-        "#991B1B"
-    }}
-  >
-    {leadScore > 75
-      ? "Ready to quote"
-      : leadScore > 50
-      ? "Needs more info"
-      : "Not ready"}
-  </Typography>
-</Paper>
+        {/* Progress bar */}
+        <LinearProgress
+          variant="determinate"
+          value={leadScore}
+          sx={{
+            height: 6,
+            borderRadius: 5,
+            bgcolor: "#E5E7EB",
+            "& .MuiLinearProgress-bar": {
+              bgcolor:
+                leadScore > 75
+                  ? "#10B981"
+                  : leadScore > 50
+                    ? "#F59E0B"
+                    : "#EF4444",
+            },
+          }}
+        />
 
+        {/* Helper text */}
+        <Typography
+          variant="caption"
+          sx={{
+            display: "block",
+            mt: 0.8,
+            color:
+              leadScore > 75
+                ? "#065F46"
+                : leadScore > 50
+                  ? "#92400E"
+                  : "#991B1B",
+          }}
+        >
+          {leadScore > 75
+            ? "Ready to quote"
+            : leadScore > 50
+              ? "Needs more info"
+              : "Not ready"}
+        </Typography>
+      </Paper>
 
       <Box sx={{ textAlign: "center", mb: 2 }}>
         <Avatar
@@ -852,25 +961,39 @@ else {
         <Typography variant="h6" fontWeight="800" color="#2C3E50">
           {activeLeadData.customer_name || "Guest"}
         </Typography>
-          
+
         <Stack sx={{ mt: 1.5 }} spacing={0.8} alignItems="center">
           <Typography
             variant="body2"
-            sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555", fontWeight: 500, fontSize: "0.9rem" }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              color: "#555",
+              fontWeight: 500,
+              fontSize: "0.9rem",
+            }}
           >
             <Phone fontSize="small" sx={{ color: "#C30B0B" }} />
             {activeLeadData.contact_number || "-"}
           </Typography>
-          {
-            selectedChat?.source==="whatsapp"&&<Typography
-            variant="body2"
-            sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555", fontWeight: 500, fontSize: "0.9rem" }}
-          >
-            <WhatsApp fontSize="small" sx={{ color: "#C30B0B" }} />
-            {selectedChat?.phone || "-"}
-          </Typography>
-          }
-          
+          {selectedChat?.source === "whatsapp" && (
+            <Typography
+              variant="body2"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#555",
+                fontWeight: 500,
+                fontSize: "0.9rem",
+              }}
+            >
+              <WhatsApp fontSize="small" sx={{ color: "#C30B0B" }} />
+              {selectedChat?.phone || "-"}
+            </Typography>
+          )}
+
           {/* <Typography
             variant="body2"
             sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555", fontWeight: 500, fontSize: "0.9rem" }}
@@ -878,12 +1001,18 @@ else {
             <Phone fontSize="small" sx={{ color: "#C30B0B" }} />
             {filteredChats.phone || "-"}
           </Typography> */}
-          
 
           {activeLeadData.email && (
             <Typography
               variant="body2"
-              sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555", fontWeight: 500, fontSize: "0.9rem" }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                color: "#555",
+                fontWeight: 500,
+                fontSize: "0.9rem",
+              }}
             >
               <Mail fontSize="small" sx={{ color: "#C30B0B" }} />
               {activeLeadData.email}
@@ -892,19 +1021,41 @@ else {
 
           <Typography
             variant="body2"
-            sx={{ display: "flex", alignItems: "center", gap: 1, color: "#555", fontWeight: 500, fontSize: "0.9rem" }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              color: "#555",
+              fontWeight: 500,
+              fontSize: "0.9rem",
+            }}
           >
             <CalendarMonth fontSize="small" sx={{ color: "#C30B0B" }} />
             {formatDateOnly(
               chats.find((c) => c.chat_id === activeChatId)?.created_at ||
-                chats.find((c) => c.chat_id === activeChatId)?.updated_at
+                chats.find((c) => c.chat_id === activeChatId)?.updated_at,
             )}
           </Typography>
         </Stack>
       </Box>
 
-      <Paper sx={{ p: 2, bgcolor: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: 2, boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5} pb={1} borderBottom="1px dashed #E0E0E0">
+      <Paper
+        sx={{
+          p: 2,
+          bgcolor: "#FEF2F2",
+          border: "1px solid #FEE2E2",
+          borderRadius: 2,
+          boxShadow: "0 4px 15px rgba(0,0,0,0.03)",
+        }}
+      >
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={1.5}
+          pb={1}
+          borderBottom="1px dashed #E0E0E0"
+        >
           <Box display="flex" alignItems="center" gap={1}>
             <Description fontSize="small" sx={{ color: "#C30B0B" }} />
             <Typography variant="caption" fontWeight="bold" color="#C30B0B">
@@ -916,7 +1067,9 @@ else {
             <Tooltip title="Regenerate summary">
               <IconButton
                 size="small"
-                onClick={() => generateSummary(activeChatId)}
+                onClick={() =>
+                  generateSummary(activeChatId, activeChatIdSource)
+                }
                 disabled={loadingSummary || !activeChatId}
               >
                 <Refresh fontSize="small" />
@@ -932,11 +1085,23 @@ else {
             <Skeleton width="70%" height={20} />
           </Box>
         ) : summary ? (
-          <Typography variant="body2" sx={{ fontSize: "0.85rem", color: "#444", lineHeight: 1.8, whiteSpace: "pre-line" }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontSize: "0.85rem",
+              color: "#444",
+              lineHeight: 1.8,
+              whiteSpace: "pre-line",
+            }}
+          >
             {summary.replace(/\*\*/g, "")}
           </Typography>
         ) : (
-          <Typography variant="caption" color="text.secondary" fontStyle="italic">
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            fontStyle="italic"
+          >
             Summary not available.
           </Typography>
         )}
@@ -944,19 +1109,48 @@ else {
 
       <Box mt={2}>
         {[
-          { label: "Event", val: activeLeadData.event_type, icon: <Bolt sx={{ color: "#7F8C8D" }} /> },
-          { label: "Guests", val: activeLeadData.count ? `${activeLeadData.count} Pax` : "-", icon: <CheckCircle sx={{ color: "#7F8C8D" }} /> },
-          { label: "Location", val: activeLeadData.delivery_location, icon: <Place sx={{ color: "#7F8C8D" }} /> },
-          { label: "Date", val: activeLeadData.event_date_time, icon: <CalendarMonth sx={{ color: "#7F8C8D" }} /> },
+          {
+            label: "Event",
+            val: activeLeadData.event_type,
+            icon: <Bolt sx={{ color: "#7F8C8D" }} />,
+          },
+          {
+            label: "Guests",
+            val: activeLeadData.count ? `${activeLeadData.count} Pax` : "-",
+            icon: <CheckCircle sx={{ color: "#7F8C8D" }} />,
+          },
+          {
+            label: "Location",
+            val: activeLeadData.delivery_location,
+            icon: <Place sx={{ color: "#7F8C8D" }} />,
+          },
+          {
+            label: "Date",
+            val: activeLeadData.event_date_time,
+            icon: <CalendarMonth sx={{ color: "#7F8C8D" }} />,
+          },
         ].map((item, i) => (
-          <Box key={i} display="flex" alignItems="center" justifyContent="space-between" p={1.5} borderBottom="1px solid #F5F5F5">
+          <Box
+            key={i}
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            p={1.5}
+            borderBottom="1px solid #F5F5F5"
+          >
             <Box display="flex" alignItems="center" gap={1.5}>
               {item.icon}
               <Typography variant="body2" fontWeight="500" color="#7F8C8D">
                 {item.label}
               </Typography>
             </Box>
-            <Typography variant="body2" fontWeight="700" color="#2C3E50" textAlign="right" sx={{ maxWidth: "58%" }}>
+            <Typography
+              variant="body2"
+              fontWeight="700"
+              color="#2C3E50"
+              textAlign="right"
+              sx={{ maxWidth: "58%" }}
+            >
               {Array.isArray(item.val) ? item.val.join(", ") : item.val || "-"}
             </Typography>
           </Box>
@@ -969,7 +1163,14 @@ else {
   // UI: MAIN
   // ---------------------------------------------
   return (
-    <Box sx={{ display: "flex", height: "100vh", bgcolor: "#F0F2F5", overflow: "hidden" }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        bgcolor: "#F0F2F5",
+        overflow: "hidden",
+      }}
+    >
       {/* LEFT SIDEBAR */}
       <Box
         sx={{
@@ -995,25 +1196,60 @@ else {
       >
         {activeChatId ? (
           <>
-            <AppBar position="static" color="transparent" elevation={0} sx={{ bgcolor: "white", borderBottom: "1px solid #E2E8F0", px: 1 }}>
+            <AppBar
+              position="static"
+              color="transparent"
+              elevation={0}
+              sx={{
+                bgcolor: "white",
+                borderBottom: "1px solid #E2E8F0",
+                px: 1,
+              }}
+            >
               <Toolbar>
                 {isMobile && (
-                  <IconButton onClick={() => setActiveChatId(null)} sx={{ mr: 1, color: "#2C3E50" }}>
+                  <IconButton
+                    onClick={() => setActiveChatId(null)}
+                    sx={{ mr: 1, color: "#2C3E50" }}
+                  >
                     <ArrowBack />
                   </IconButton>
                 )}
 
-                <Box flexGrow={1} display="flex" alignItems="center" gap={1} overflow="hidden">
-                  <Avatar sx={{ bgcolor: "#2C3E50", width: 34, height: 34, fontSize: 14 }}>
+                <Box
+                  flexGrow={1}
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  overflow="hidden"
+                >
+                  <Avatar
+                    sx={{
+                      bgcolor: "#2C3E50",
+                      width: 34,
+                      height: 34,
+                      fontSize: 14,
+                    }}
+                  >
                     {activeLeadData.customer_name?.[0] || "G"}
                   </Avatar>
 
                   <Box overflow="hidden">
-                    <Typography variant="subtitle1" color="#2C3E50" fontWeight={700} noWrap>
+                    <Typography
+                      variant="subtitle1"
+                      color="#2C3E50"
+                      fontWeight={700}
+                      noWrap
+                    >
                       {activeLeadData.customer_name || "Guest"}
                     </Typography>
                     {activeLeadData.delivery_location && (
-                      <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        noWrap
+                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                      >
                         <Place sx={{ fontSize: 12 }} />{" "}
                         {Array.isArray(activeLeadData.delivery_location)
                           ? activeLeadData.delivery_location.join(", ")
@@ -1028,12 +1264,21 @@ else {
                 )}
 
                 {isMobile && (
-                  <IconButton onClick={() => setShowMobileDetails(true)} color="primary">
+                  <IconButton
+                    onClick={() => setShowMobileDetails(true)}
+                    color="primary"
+                  >
                     <Info />
                   </IconButton>
                 )}
 
-                {!isMobile && <Avatar sx={{ ml: 2, bgcolor: "#2C3E50", width: 34, height: 34 }}>A</Avatar>}
+                {!isMobile && (
+                  <Avatar
+                    sx={{ ml: 2, bgcolor: "#2C3E50", width: 34, height: 34 }}
+                  >
+                    A
+                  </Avatar>
+                )}
               </Toolbar>
 
               {/* Active chat errors */}
@@ -1050,10 +1295,18 @@ else {
               {/* Start Date/Time Indicator */}
               {activeLoading ? (
                 <Box>
-                  <Skeleton height={30} width={180} sx={{ mx: "auto", mb: 2 }} />
+                  <Skeleton
+                    height={30}
+                    width={180}
+                    sx={{ mx: "auto", mb: 2 }}
+                  />
                   {Array.from({ length: 6 }).map((_, i) => (
                     <Box key={i} sx={{ mb: 2 }}>
-                      <Skeleton variant="rounded" height={54} sx={{ width: `${60 + (i % 3) * 10}%` }} />
+                      <Skeleton
+                        variant="rounded"
+                        height={54}
+                        sx={{ width: `${60 + (i % 3) * 10}%` }}
+                      />
                     </Box>
                   ))}
                 </Box>
@@ -1071,25 +1324,44 @@ else {
                           border: "1px solid #CBD5E0",
                         }}
                       >
-                        <Typography variant="caption" color="#4A5568" fontWeight="600" fontSize="0.75rem">
-                          {formatFullDateTime(activeMessages[0].timestamp || chats.find((c) => c.chat_id === activeChatId)?.updated_at)}
+                        <Typography
+                          variant="caption"
+                          color="#4A5568"
+                          fontWeight="600"
+                          fontSize="0.75rem"
+                        >
+                          {formatFullDateTime(
+                            activeMessages[0].timestamp ||
+                              chats.find((c) => c.chat_id === activeChatId)
+                                ?.updated_at,
+                          )}
                         </Typography>
                       </Paper>
                     </Box>
                   )}
 
-                  {Array.isArray(activeMessages) && activeMessages.length > 0 ? (
+                  {Array.isArray(activeMessages) &&
+                  activeMessages.length > 0 ? (
                     activeMessages.map((msg, idx) => (
                       <Box
                         key={idx}
                         sx={{
                           display: "flex",
                           flexDirection: "column",
-                          alignItems: msg.role === "user" ? "flex-start" : "flex-end",
+                          alignItems:
+                            msg.role === "user" ? "flex-start" : "flex-end",
                           mb: 2,
                         }}
                       >
-                        <Box sx={{ display: "flex", gap: 1, flexDirection: msg.role === "user" ? "row" : "row-reverse", maxWidth: "85%" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                            flexDirection:
+                              msg.role === "user" ? "row" : "row-reverse",
+                            maxWidth: "85%",
+                          }}
+                        >
                           <Avatar
                             sx={{
                               width: 32,
@@ -1109,24 +1381,42 @@ else {
                               p: 1.5,
                               px: 2,
                               borderRadius: 2,
-                              bgcolor: msg.role === "user" ? "white" : "#2C3E50",
+                              bgcolor:
+                                msg.role === "user" ? "white" : "#2C3E50",
                               color: msg.role === "user" ? "#2C3E50" : "white",
                               borderTopLeftRadius: msg.role === "user" ? 4 : 16,
-                              borderTopRightRadius: msg.role === "user" ? 16 : 4,
+                              borderTopRightRadius:
+                                msg.role === "user" ? 16 : 4,
                               minWidth: "120px",
                               position: "relative",
                             }}
                           >
-                            <Typography variant="body2" sx={{ lineHeight: 1.5, whiteSpace: "pre-wrap", mb: 0.5 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                lineHeight: 1.5,
+                                whiteSpace: "pre-wrap",
+                                mb: 0.5,
+                              }}
+                            >
                               {cleanText(msg.text)}
                             </Typography>
 
-                            <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                alignItems: "center",
+                              }}
+                            >
                               <Typography
                                 variant="caption"
                                 sx={{
                                   fontSize: "0.65rem",
-                                  color: msg.role === "user" ? "#718096" : "rgba(255,255,255,0.7)",
+                                  color:
+                                    msg.role === "user"
+                                      ? "#718096"
+                                      : "rgba(255,255,255,0.7)",
                                   mt: -0.5,
                                 }}
                               >
@@ -1149,7 +1439,14 @@ else {
             </Box>
           </>
         ) : (
-          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%" bgcolor="#F8F9FA">
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            height="100%"
+            bgcolor="#F8F9FA"
+          >
             <Typography variant="h5" color="#BDC3C7" fontWeight="700">
               Select a Lead
             </Typography>
@@ -1162,7 +1459,9 @@ else {
 
       {/* RIGHT DETAILS PANEL */}
       {isDesktop ? (
-        <Box sx={{ width: DETAILS_WIDTH, flexShrink: 0 }}>{activeChatId ? DetailsPanel : <Box sx={{ width: DETAILS_WIDTH }} />}</Box>
+        <Box sx={{ width: DETAILS_WIDTH, flexShrink: 0 }}>
+          {activeChatId ? DetailsPanel : <Box sx={{ width: DETAILS_WIDTH }} />}
+        </Box>
       ) : (
         <Drawer
           anchor="right"

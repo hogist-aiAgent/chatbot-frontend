@@ -48,13 +48,13 @@ export const api = {
   },
 
   // Get chat details by ID
-  getChatDetails: async (chatId) => {
+  getChatDetails: async (chatId,source) => {
     const res = await client.get(`/website-get-chat/${chatId}`);
     return res.data;
   },
 
   // Generate summary for a chat
-  generateSummary: async (chatId) => {
+  generateSummary: async (chatId,) => {
     const res = await client.post("/website-generate-summary", {
       chat_id: chatId,
     });
